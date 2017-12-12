@@ -4,4 +4,3 @@ version = "0.1.0"
 authors = ["muvlon <muvlon@hentzes.de>"]
 
 [dependencies]
-gtk = "0.3.0"
