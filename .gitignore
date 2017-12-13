@@ -3,3 +3,7 @@
 **/*.rs.bk
 **/*.glade~
 .idea
+
+/target/
+**/*.rs.bk
+Cargo.lock

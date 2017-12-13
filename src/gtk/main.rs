@@ -7,7 +7,7 @@ fn main() {
         return;
     }
 
-    let glade_src = include_str!("../gtk/main.glade");
+    let glade_src = include_str!("main.glade");
     let builder = gtk::Builder::new_from_string(glade_src);
     let window:  gtk::ApplicationWindow = builder.get_object("main_window").unwrap();
     let scale:   gtk::Scale             = builder.get_object("goennungs_scale").unwrap();

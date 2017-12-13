@@ -3,6 +3,25 @@ name = "installman"
 version = "0.1.0"
 authors = ["muvlon <muvlon@hentzes.de>"]
 
-[dependencies.gtk]
-version = "0.3.0"
-features = ["v3_10"]
+[dependencies]
+gtk = { optional = true, version = "^0.3.0", features = ["v3_10"] }
+clap = { optional = true, version = "^2.29.0"}
+
+[[bin]]
+name = "installman-gtk"
+path = "src/gtk/main.rs"
+required-features = ["gtk"]
+
+[[bin]]
+name = "installman-cli"
+path = "src/cli/main.rs"
+required-features = ["clap"]
+
+[features]
+default = ["gtk", "clap"]
+
+[profile.dev]
+codegen-units=4
+
+[profile.release]
+lto = true
