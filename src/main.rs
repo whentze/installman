@@ -30,7 +30,7 @@ fn main() {
         warning.set_visible(sca.get_value() > 90.0);
     });
 
-    window.connect_delete_event(move |w, _| {
+    window.connect_delete_event(move |_, _| {
             gtk::main_quit();
             Inhibit(false)
     });
