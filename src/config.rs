@@ -1,6 +1,14 @@
 use std::path::{Path, PathBuf};
 use std::env;
 
+lazy_static! {
+    pub static ref CONFIG_LOCATION : PathBuf = {
+        let mut path = env::home_dir().unwrap();
+        path.push(".config/installman/config.toml");
+        path
+    };
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 struct App(PathBuf);
 

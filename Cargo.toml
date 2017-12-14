@@ -7,6 +7,7 @@ authors = ["muvlon <muvlon@hentzes.de>"]
 serde = "1.0"
 serde_derive = "1.0"
 toml  = "0.4"
+lazy_static = "1.0"
 
 gtk = { optional = true, version = "0.3", features = ["v3_10"] }
 clap = { optional = true, version = "2.29"}
