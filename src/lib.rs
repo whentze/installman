@@ -48,22 +48,22 @@ pub fn classify_target<A: AsRef<Path>>(path: A) -> Result<TargetType, io::Error>
     match magic_bytes {
         [0x7F, 0x45, 0x4C, 0x46, ..] => {
             match extension {
-                Some(ref s) if s == "appimage" || s == "AppImage" => { return Ok(Executable(AppImage)); },
-                _ => { return Ok(Executable(Binary)); },
+                Some(ref s) if s == "appimage" || s == "AppImage" => return Ok(Executable(AppImage)),
+                _ => return Ok(Executable(Binary)),
             }
         }
 
         [0x1F, 0x8B, ..] |                    // .gz
         [0x1F, 0x9D, ..] | [0x1F, 0xA0, ..] | // .z
         [0x42, 0x5A, 0x68, ..]                // .bz2
-            => { return Ok(Archive); },
+            => return Ok(Archive),
 
-        [.., 0x00, b'0', b'0'] |
+        [.., 0x00,   _,    _ ] |
         [.., b' ', b' ', 0x00] if &magic_bytes[..5] == b"ustar"
-            => { return Ok(Archive); },
+            => return Ok(Archive),
 
         [b'#', b'!', ..]
-            => { return Ok(Executable(Script)); },
+            => return Ok(Executable(Script)),
 
         _ => ()
     };
