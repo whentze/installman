@@ -1,4 +1,4 @@
-#![feature(slice_patterns)]
+#![feature(slice_patterns, advanced_slice_patterns)]
 
 #[macro_use]
 extern crate lazy_static;
@@ -27,7 +27,7 @@ pub enum TargetType {
 #[derive(Debug)]
 pub enum ExecutableType {
     Binary,
-    ShellScript,
+    Script,
     AppImage,
     Other,
 }
@@ -41,22 +41,30 @@ pub fn classify_target<A: AsRef<Path>>(path: A) -> Result<TargetType, io::Error>
     }
 
     let mut file = File::open(path)?;
-    let mut magic_bytes : [u8; 8] = [0, 0, 0, 0, 0, 0, 0, 0];
+    let mut magic_bytes: [u8; 8] = [0, 0, 0, 0, 0, 0, 0, 0];
     let extension = path.extension().map(|e| e.to_string_lossy().into_owned());
     file.read_exact(&mut magic_bytes)?;
 
-    match magic_bytes {
-        [0x7F, 0x45, 0x4C, 0x46, ..] => {
-            match extension {
-                Some(ref s) if s == "appimage" || s == "AppImage" => { return Ok(Executable(AppImage)); },
-                _ => { return Ok(Executable(Binary)); },
-            }
-        }
-        [0x1F, 0x8B, ..] | [0x1F, 0x9D, ..] | [0x1F, 0xA0, ..] |
-        [0x42, 0x5A, 0x68, ..] |
-        [0x75, 0x73, 0x74, 0x61, 0x72, 0x00, 0x30, 0x30] |
-        [0x75, 0x73, 0x74, 0x61, 0x72, 0x20, 0x20, 0x00] => { return Ok(Archive); },
-        _ => ()
-    }
-    Ok(Unknown)
+    Ok(match magic_bytes {
+        [0x7F, 0x45, 0x4C, 0x46, ..]
+            => Executable(match extension {
+                Some(ref s) if s.to_lowercase() == "appimage" => AppImage,
+                _ => Binary,
+                }
+            ),
+
+        [b'#', b'!', ..]
+            => Executable(Script),
+
+        [0x1F, 0x8B, ..] |                    // .gz
+        [0x1F, 0x9D, ..] | [0x1F, 0xA0, ..] | // .z
+        [0x42, 0x5A, 0x68, ..]                // .bz2
+            => Archive,
+
+        [.., 0x00,   _,    _ ] |
+        [.., b' ', b' ', 0x00] if &magic_bytes[..5] == b"ustar"
+            => Archive,
+
+        _ => Unknown,
+    })
 }

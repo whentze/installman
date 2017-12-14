@@ -40,17 +40,19 @@ struct Config {
 }
 
 impl Config {
-    fn new<A:AsRef<Path>>(apps: A, desk: A, bins: A) -> Self {
+    fn new<A: AsRef<Path>>(apps: A, desk: A, bins: A) -> Self {
         Config {
-            apps_location          : apps.as_ref().to_path_buf(),
-            desktop_files_location : desk.as_ref().to_path_buf(),
-            bin_symlink_location   : bins.as_ref().to_path_buf(),
+            apps_location: apps.as_ref().to_path_buf(),
+            desktop_files_location: desk.as_ref().to_path_buf(),
+            bin_symlink_location: bins.as_ref().to_path_buf(),
         }
     }
 }
 
 impl Default for Config {
     fn default() -> Self {
-        Config::new(&*APPS_LOCATION, &*DESKTOP_FILES_LOCATION, &*BIN_SYMLINK_LOCATION)
+        Config::new(&*APPS_LOCATION,
+                    &*DESKTOP_FILES_LOCATION,
+                    &*BIN_SYMLINK_LOCATION)
     }
 }

@@ -15,7 +15,7 @@ fn main() {
     let button_install: gtk::Button = builder.get_object("button_install").unwrap();
     let file_chooser: gtk::FileChooser = builder.get_object("file_chooser").unwrap();
     let label_file_chooser: gtk::Label = builder.get_object("label_file_chooser").unwrap();
-    let window:  gtk::ApplicationWindow = builder.get_object("main_window").unwrap();
+    let window: gtk::ApplicationWindow = builder.get_object("main_window").unwrap();
     window.show_all();
 
     //let list_store: gtk::ListStore = builder.get_object("list_store").unwrap();
@@ -34,8 +34,8 @@ fn main() {
     });
 
     window.connect_delete_event(move |_, _| {
-            gtk::main_quit();
-            Inhibit(false)
+        gtk::main_quit();
+        Inhibit(false)
     });
     gtk::main();
 }
