@@ -46,7 +46,7 @@ pub fn classify_target<A: AsRef<Path>>(path: A) -> Result<TargetType, io::Error>
     file.read_exact(&mut magic_bytes)?;
 
     Ok(match magic_bytes {
-        [0x7F, 0x45, 0x4C, 0x46, ..]
+        [0x7F, b'E', b'L', b'F', ..]
             => Executable(match extension {
                 Some(ref s) if s.to_lowercase() == "appimage" => AppImage,
                 _ => Binary,
