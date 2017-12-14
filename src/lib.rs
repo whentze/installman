@@ -52,10 +52,11 @@ pub fn classify_target<A: AsRef<Path>>(path: A) -> Result<TargetType, io::Error>
                 _ => { return Ok(Executable(Binary)); },
             }
         }
-        [0x1F, 0x8B, ..] | [0x1F, 0x9D, ..] | [0x1F, 0xA0, ..] |
-        [0x42, 0x5A, 0x68, ..] |
-        [0x75, 0x73, 0x74, 0x61, 0x72, 0x00, 0x30, 0x30] |
-        [0x75, 0x73, 0x74, 0x61, 0x72, 0x20, 0x20, 0x00] => { return Ok(Archive); },
+        [0x1F, 0x8B, ..]                      // .gz
+        | [0x1F, 0x9D, ..] | [0x1F, 0xA0, ..] // .z
+        | [0x42, 0x5A, 0x68, ..]              // .bz2
+        | [b'u', b's', b't', b'a', b'r', 0x00, b'0', b'0']
+        | [b'u', b's', b't', b'a', b'r', b' ', b' ', 0x00] => { return Ok(Archive); },
         [b'#', b'!', ..] => { return Ok(Executable(Script)); },
         _ => ()
     }
