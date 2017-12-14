@@ -27,7 +27,7 @@ pub enum TargetType {
 #[derive(Debug)]
 pub enum ExecutableType {
     Binary,
-    ShellScript,
+    Script,
     AppImage,
     Other,
 }
@@ -56,6 +56,7 @@ pub fn classify_target<A: AsRef<Path>>(path: A) -> Result<TargetType, io::Error>
         [0x42, 0x5A, 0x68, ..] |
         [0x75, 0x73, 0x74, 0x61, 0x72, 0x00, 0x30, 0x30] |
         [0x75, 0x73, 0x74, 0x61, 0x72, 0x20, 0x20, 0x00] => { return Ok(Archive); },
+        [b'#', b'!', ..] => { return Ok(Executable(Script)); },
         _ => ()
     }
     Ok(Unknown)
