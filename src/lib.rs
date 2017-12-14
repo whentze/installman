@@ -16,21 +16,23 @@ use std::fs::{self, File};
 use std::path::Path;
 use std::io::{self, Read};
 
-enum TargetType {
+#[derive(Debug)]
+pub enum TargetType {
     Executable(ExecutableType),
     Directory,
     Archive,
     Unknown,
 }
 
-enum ExecutableType {
+#[derive(Debug)]
+pub enum ExecutableType {
     Binary,
     ShellScript,
     AppImage,
     Other,
 }
 
-fn classify_target<A: AsRef<Path>>(path: A) -> Result<TargetType, io::Error> {
+pub fn classify_target<A: AsRef<Path>>(path: A) -> Result<TargetType, io::Error> {
     use TargetType::*;
     use ExecutableType::*;
     let path = path.as_ref();
