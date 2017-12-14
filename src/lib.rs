@@ -41,7 +41,7 @@ pub fn classify_target<A: AsRef<Path>>(path: A) -> Result<TargetType, io::Error>
     }
 
     let mut file = File::open(path)?;
-    let mut magic_bytes : [u8; 8] = [0, 0, 0, 0, 0, 0, 0, 0];
+    let mut magic_bytes: [u8; 8] = [0, 0, 0, 0, 0, 0, 0, 0];
     let extension = path.extension().map(|e| e.to_string_lossy().into_owned());
     file.read_exact(&mut magic_bytes)?;
 
