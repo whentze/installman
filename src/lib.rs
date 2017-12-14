@@ -38,7 +38,7 @@ fn classify_target<A: AsRef<Path>>(path: A) -> Result<TargetType, io::Error> {
     if let Some(ext) = path.as_ref().extension() {
         match &*ext.to_string_lossy() {
             "sh" => { return Ok(Executable(ShellScript)); },
-            "appimage" => { return Ok(Executable(AppImage)); },
+            "appimage" | "AppImage" => { return Ok(Executable(AppImage)); },
             _ => {},
         }
     }
