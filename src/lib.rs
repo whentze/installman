@@ -45,27 +45,26 @@ pub fn classify_target<A: AsRef<Path>>(path: A) -> Result<TargetType, io::Error>
     let extension = path.extension().map(|e| e.to_string_lossy().into_owned());
     file.read_exact(&mut magic_bytes)?;
 
-    match magic_bytes {
+    Ok(match magic_bytes {
         [0x7F, 0x45, 0x4C, 0x46, ..]
-            => return Ok(Executable(match extension {
+            => Executable(match extension {
                 Some(ref s) if s.to_lowercase() == "appimage" => AppImage,
                 _ => Binary,
                 }
-            )),
+            ),
+
+        [b'#', b'!', ..]
+            => Executable(Script),
 
         [0x1F, 0x8B, ..] |                    // .gz
         [0x1F, 0x9D, ..] | [0x1F, 0xA0, ..] | // .z
         [0x42, 0x5A, 0x68, ..]                // .bz2
-            => return Ok(Archive),
+            => Archive,
 
         [.., 0x00,   _,    _ ] |
         [.., b' ', b' ', 0x00] if &magic_bytes[..5] == b"ustar"
-            => return Ok(Archive),
+            => Archive,
 
-        [b'#', b'!', ..]
-            => return Ok(Executable(Script)),
-
-        _ => ()
-    };
-    Ok(Unknown)
+        _ => Unknown,
+    })
 }
