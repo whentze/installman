@@ -21,13 +21,8 @@ fn main() {
     //let list_store: gtk::ListStore = builder.get_object("list_store").unwrap();
 
     button_install.connect_clicked(move|_|{
-        println!("{:?}",file_chooser.get_filename());
         match file_chooser.get_filename(){
-            Some(x) => match classify_target(x){
-                Ok(TargetType::Executable(_)) => label_file_chooser.set_text("Executable"),
-                Ok(TargetType::Archive) => label_file_chooser.set_text("Archive"),
-                _ => label_file_chooser.set_text("Unknown Type")
-            },
+            Some(x) => label_file_chooser.set_text(&format!("{:?}", classify_target(x))),
             None => label_file_chooser.set_text("Please select a file!")
         }
 
