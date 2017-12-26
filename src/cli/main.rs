@@ -23,6 +23,9 @@ fn main() {
         .get_matches();
     if let Some(matches) = matches.subcommand_matches("install") {
         let target = matches.value_of("file").unwrap();
-        println!("File identified as: {:?}", classify_target(target));
+        match classify_target(target){
+            Ok(x) => println!("File identified as: {}", x),
+            Err(_) => println!("Target Classification Failed!"),
+        }
     }
 }

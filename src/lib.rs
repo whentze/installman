@@ -16,8 +16,8 @@ mod config;
 use std::fs::{self, File};
 use std::path::{Path, PathBuf};
 use std::io::{self, Read};
+use std::fmt;
 
-#[derive(Debug)]
 pub enum TargetType {
     Executable(ExecutableType),
     Directory,
@@ -26,7 +26,6 @@ pub enum TargetType {
     Unknown,
 }
 
-#[derive(Debug)]
 pub enum ExecutableType {
     Binary,
     Script,
@@ -34,13 +33,31 @@ pub enum ExecutableType {
     Other,
 }
 
-#[derive(Debug)]
 pub enum CompressionType {
     Gzip,
     Bzip2,
     Lzw,
     Lzma,
     Unsupported,
+}
+
+impl fmt::Display for TargetType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self{
+            &TargetType::Executable(ref Binary) => write!(f, "Executable Binary"),
+            &TargetType::Executable(ref Script) => write!(f, "Executable Binary"),
+            &TargetType::Executable(ref AppImage) => write!(f, "Executable Binary"),
+            &TargetType::Executable(ref Other) => write!(f, "Executable Binary"),
+            &TargetType::Directory => write!(f, "Directory"),
+            &TargetType::Archive => write!(f, "Archive"),
+            &TargetType::Compressed(ref Gzip) => write!(f, "Compressed Gzip"),
+            &TargetType::Compressed(ref Lzw) => write!(f, "Compressed Lzw"),
+            &TargetType::Compressed(ref Lzma) => write!(f, "Compressed Lzma"),
+            &TargetType::Compressed(ref Unsupported) => write!(f, "Compressed Unsupported"),
+            &TargetType::Unknown => write!(f, "Unknown Target Type"),
+        }
+
+    }
 }
 
 pub fn classify_target<A: AsRef<Path>>(path: A) -> Result<TargetType, io::Error> {
@@ -57,7 +74,6 @@ pub fn classify_target<A: AsRef<Path>>(path: A) -> Result<TargetType, io::Error>
     let extension = path.extension().map(|e| e.to_string_lossy().into_owned());
     let mut magic_bytes: [u8; 8] = [0, 0, 0, 0, 0, 0, 0, 0];
     file.read_exact(&mut magic_bytes)?;
-
     Ok(match magic_bytes {
         [0x7F, b'E', b'L', b'F', ..]
             => Executable(match extension {

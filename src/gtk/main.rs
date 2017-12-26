@@ -22,7 +22,10 @@ fn main() {
 
     button_install.connect_clicked(move|_|{
         match file_chooser.get_filename(){
-            Some(x) => label_file_chooser.set_text(&format!("{:?}", classify_target(x))),
+            Some(x) => match classify_target(x) {
+                Ok(v) => label_file_chooser.set_text(&format!("File identified as: {}", v)),
+                Err(_) =>  label_file_chooser.set_text("Target Classification Failed!"),
+            },
             None => label_file_chooser.set_text("Please select a file!")
         }
 
