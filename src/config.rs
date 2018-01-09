@@ -60,6 +60,12 @@ impl Config {
             bin_symlink_location: bins.as_ref().to_path_buf(),
         }
     }
+
+    fn store(&self) -> Result<(), Box<::std::error::Error>> {
+        let mut f = File::create(&*CONFIG_LOCATION)?;
+        f.write(&*toml::to_vec(self)?)?;
+        Ok(())
+    }
 }
 
 impl Default for Config {
@@ -69,10 +75,4 @@ impl Default for Config {
                     &*DESKTOP_FILES_LOCATION,
                     &*BIN_SYMLINK_LOCATION)
     }
-}
-
-fn write_config(conf : &Config) -> Result<(), Box<::std::error::Error>> {
-    let mut f = File::create(&*CONFIG_LOCATION)?;
-    f.write(&*toml::to_vec(conf)?)?;
-    Ok(())
 }
