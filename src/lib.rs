@@ -43,18 +43,18 @@ pub enum CompressionType {
 
 impl fmt::Display for TargetType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self{
-            &TargetType::Executable(ref Binary) => write!(f, "Executable Binary"),
-            &TargetType::Executable(ref Script) => write!(f, "Executable Binary"),
-            &TargetType::Executable(ref AppImage) => write!(f, "Executable Binary"),
-            &TargetType::Executable(ref Other) => write!(f, "Executable Binary"),
-            &TargetType::Directory => write!(f, "Directory"),
-            &TargetType::Archive => write!(f, "Archive"),
-            &TargetType::Compressed(ref Gzip) => write!(f, "Compressed Gzip"),
-            &TargetType::Compressed(ref Lzw) => write!(f, "Compressed Lzw"),
-            &TargetType::Compressed(ref Lzma) => write!(f, "Compressed Lzma"),
-            &TargetType::Compressed(ref Unsupported) => write!(f, "Compressed Unsupported"),
-            &TargetType::Unknown => write!(f, "Unknown Target Type"),
+        use CompressionType::*;
+        use TargetType::*;
+        match *self{
+            Executable(_) => write!(f, "Executable Binary"),
+            Directory => write!(f, "Directory"),
+            Archive => write!(f, "Archive"),
+            Compressed(Gzip) => write!(f, "Compressed Gzip"),
+            Compressed(Lzw) => write!(f, "Compressed Lzw"),
+            Compressed(Lzma) => write!(f, "Compressed Lzma"),
+            Compressed(Bzip2) => write!(f, "Compressed Bzip"),
+            Compressed(Unsupported) => write!(f, "Compressed Unsupported"),
+            Unknown => write!(f, "Unknown Target Type"),
         }
 
     }
