@@ -4,18 +4,24 @@
 extern crate lazy_static;
 
 #[macro_use]
+extern crate failure;
+
+#[macro_use]
 extern crate serde_derive;
 
 extern crate serde;
 extern crate toml;
 extern crate tar;
 
+mod error;
 mod config;
 
 use std::fs::{self, File};
 use std::path::{Path, PathBuf};
 use std::io::{self, Read};
 use std::fmt;
+
+use error::*;
 
 pub enum TargetType {
     Executable(ExecutableType),
@@ -59,7 +65,7 @@ impl fmt::Display for TargetType {
     }
 }
 
-pub fn classify_target<A: AsRef<Path>>(path: A) -> Result<TargetType, io::Error> {
+pub fn classify_target<A: AsRef<Path>>(path: A) -> Result<TargetType> {
     use TargetType::*;
     use ExecutableType::*;
     use CompressionType::*;
@@ -113,9 +119,10 @@ fn init () -> Result<()> {
     fs::create_dir(&*config::APPS_LOCATION)?;
     fs::create_dir(&*config::DESKTOP_FILES_LOCATION)?;
     fs::create_dir(&*config::BIN_SYMLINK_LOCATION)?;
+    Ok(())
 }
 
-fn untar<A: AsRef<Path>>(path: A) -> Result<Vec<PathBuf>, io::Error> {
+fn untar<A: AsRef<Path>>(path: A) -> Result<Vec<PathBuf>> {
     use TargetType::*;
     use CompressionType::*;
 
@@ -123,6 +130,6 @@ fn untar<A: AsRef<Path>>(path: A) -> Result<Vec<PathBuf>, io::Error> {
         Archive => {
             unimplemented!()
         },
-        _ => Err(io::Error::new(io::ErrorKind::InvalidInput, "Unknown archive format")),
+        _ => Err(err_msg("Not a recognized archive format.")),
     }
 }

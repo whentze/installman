@@ -4,6 +4,7 @@ use std::fs::File;
 use std::ffi::OsString;
 use std::io::Write;
 use toml;
+use error::*;
 
 lazy_static! {
     static ref CONFIG_LOCATION : PathBuf = {
@@ -61,7 +62,7 @@ impl Config {
         }
     }
 
-    pub fn store(&self) -> Result<(), Box<::std::error::Error>> {
+    pub(crate) fn store(&self) -> Result<()> {
         let mut f = File::create(&*CONFIG_LOCATION)?;
         f.write(&*toml::to_vec(self)?)?;
         Ok(())
