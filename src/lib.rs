@@ -146,7 +146,14 @@ fn add_symlink (dest: &PathBuf,symlink_name: &String) -> Result<()>{
 }
 
 fn get_app_name (path_app: &PathBuf) -> Result<String> {
-    Ok("appname_dummy".to_string())
+    use std::path::Path;
+    use TargetType::*;
+    use ExecutableType::*;
+
+    Ok(match classify_target(path_app)?{
+        Executable(_) => Path::file_stem(path_app).unwrap().to_string_lossy().into_owned(),
+        _ => "appname_dummy".to_string()
+    })
 }
 
 fn install_executable (path_exec: &PathBuf) -> Result<()>{
