@@ -39,6 +39,7 @@ fn run_subcommand(subcommand: &str, matches: &ArgMatches) -> Result<()> {
         "install" => {
             let target = matches.value_of("file").unwrap();
             println!("File identified as: {}", classify_target(target)?);
+            installman::install_target(target)?;
         },
         "init" => {
             installman::init()?

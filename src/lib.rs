@@ -135,7 +135,7 @@ fn untar<A: AsRef<Path>>(path: A) -> Result<Vec<PathBuf>> {
     }
 }
 
-fn add_symlink (dest: &PathBuf,symlink_name: &String) -> Result<()>{
+fn add_symlink<A: AsRef<Path>>(dest: A,symlink_name: &str ) -> Result<()>{
     use config::Config;
     use std::os::unix::fs;
 
@@ -145,27 +145,41 @@ fn add_symlink (dest: &PathBuf,symlink_name: &String) -> Result<()>{
     Ok(())
 }
 
-fn get_app_name (path_app: &PathBuf) -> Result<String> {
+fn get_app_name<A: AsRef<Path>>(path_app: A) -> Result<String> {
     use std::path::Path;
     use TargetType::*;
     use ExecutableType::*;
 
-    Ok(match classify_target(path_app)?{
-        Executable(_) => Path::file_stem(path_app).unwrap().to_string_lossy().into_owned(),
+    Ok(match classify_target(&path_app)?{
+        Executable(_) => Path::file_stem(path_app.as_ref()).unwrap().to_string_lossy().into_owned(),
         _ => "appname_dummy".to_string()
     })
 }
 
-fn install_executable (path_exec: &PathBuf) -> Result<()>{
+pub fn install_target<A: AsRef<Path>>(path: A) -> Result<()> {
+    use TargetType::*;
+    use ExecutableType::*;
+    match classify_target(&path)? {
+        Executable(_) => { install_executable(&path)?; }
+        _ => unimplemented!(),
+    };
+    Ok(())
+}
+
+fn install_executable<A: AsRef<Path>>(path_exec: A) -> Result<()>{
     use config::Config;
     use std::fs::copy;
 
-    let app_name = get_app_name(path_exec)?;
+    let app_name = get_app_name(&path_exec)?;
     let mut dest_path = config::APPS_LOCATION.to_path_buf();
     dest_path.push(&app_name);
-    fs::create_dir_all(dest);
-    dest_path.push(&app_name);
-    copy(path_exec, dest_path);
-    add_symlink(path_exec ,&app_name);
+    fs::create_dir_all(&dest_path)?;
+    dest_path.push(&*path_exec.as_ref().file_name().unwrap());
+    copy(path_exec, &dest_path);
+    add_symlink(&dest_path, &app_name);
     Ok(())
 }
+
+
+
+
