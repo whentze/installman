@@ -11,22 +11,22 @@ lazy_static! {
         path.push(".config/installman/config.toml");
         path
     };
-    static ref DATA_LOCATION : PathBuf = {
+    pub(crate) static ref DATA_LOCATION : PathBuf = {
         let mut path = env::home_dir().unwrap();
         path.push(".config/installman/data.toml");
         path
     };
-    static ref APPS_LOCATION : PathBuf = {
+    pub(crate) static ref APPS_LOCATION : PathBuf = {
         let mut path = env::home_dir().unwrap();
         path.push("installman_apps");
         path
     };
-    static ref DESKTOP_FILES_LOCATION : PathBuf = {
+    pub(crate) static ref DESKTOP_FILES_LOCATION : PathBuf = {
         let mut path = env::home_dir().unwrap();
         path.push(".local/share/applications");
         path
     };
-    static ref BIN_SYMLINK_LOCATION : PathBuf = {
+    pub(crate) static ref BIN_SYMLINK_LOCATION : PathBuf = {
         let mut path = env::home_dir().unwrap();
         path.push("bin");
         path
@@ -61,7 +61,7 @@ impl Config {
         }
     }
 
-    fn store(&self) -> Result<(), Box<::std::error::Error>> {
+    pub fn store(&self) -> Result<(), Box<::std::error::Error>> {
         let mut f = File::create(&*CONFIG_LOCATION)?;
         f.write(&*toml::to_vec(self)?)?;
         Ok(())

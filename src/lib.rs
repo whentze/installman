@@ -12,7 +12,6 @@ extern crate tar;
 
 mod config;
 
-
 use std::fs::{self, File};
 use std::path::{Path, PathBuf};
 use std::io::{self, Read};
@@ -102,6 +101,18 @@ pub fn classify_target<A: AsRef<Path>>(path: A) -> Result<TargetType, io::Error>
 
         _ => Unknown,
     })
+}
+
+fn init () -> Result<()> {
+    use std::fs;
+    use config::Config;
+
+    let config = Config::default();
+    config.store()?;
+    fs::File::create(&*config::DATA_LOCATION)?;
+    fs::create_dir(&*config::APPS_LOCATION)?;
+    fs::create_dir(&*config::DESKTOP_FILES_LOCATION)?;
+    fs::create_dir(&*config::BIN_SYMLINK_LOCATION)?;
 }
 
 fn untar<A: AsRef<Path>>(path: A) -> Result<Vec<PathBuf>, io::Error> {
