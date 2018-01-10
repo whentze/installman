@@ -156,6 +156,8 @@ fn install_executable (path_exec: &PathBuf) -> Result<()>{
     let app_name = get_app_name(path_exec)?;
     let mut dest_path = config::APPS_LOCATION.to_path_buf();
     dest_path.push(&app_name);
+    fs::create_dir_all(dest);
+    dest_path.push(&app_name);
     copy(path_exec, dest_path);
     add_symlink(path_exec ,&app_name);
     Ok(())
