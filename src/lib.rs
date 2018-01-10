@@ -135,12 +135,28 @@ fn untar<A: AsRef<Path>>(path: A) -> Result<Vec<PathBuf>> {
     }
 }
 
-fn add_symlink (dest: &PathBuf,symlink_name: &OsStr) -> Result<()>{
+fn add_symlink (dest: &PathBuf,symlink_name: &String) -> Result<()>{
     use config::Config;
     use std::os::unix::fs;
 
     let mut path = config::BIN_SYMLINK_LOCATION.to_path_buf();
     path.push(symlink_name);
     fs::symlink(dest, path);
+    Ok(())
+}
+
+fn get_app_name (path_app: &PathBuf) -> Result<String> {
+    Ok("appname_dummy".to_string())
+}
+
+fn install_executable (path_exec: &PathBuf) -> Result<()>{
+    use config::Config;
+    use std::fs::copy;
+
+    let app_name = get_app_name(path_exec)?;
+    let mut dest_path = config::APPS_LOCATION.to_path_buf();
+    dest_path.push(&app_name);
+    copy(path_exec, dest_path);
+    add_symlink(path_exec ,&app_name);
     Ok(())
 }
