@@ -13,7 +13,7 @@ extern crate serde;
 extern crate toml;
 extern crate tar;
 
-mod error;
+pub mod error;
 mod config;
 
 use std::fs::{self, File};
@@ -110,16 +110,16 @@ pub fn classify_target<A: AsRef<Path>>(path: A) -> Result<TargetType> {
     })
 }
 
-fn init () -> Result<()> {
+pub fn init () -> Result<()> {
     use std::fs;
     use config::Config;
 
     let config = Config::default();
     config.store()?;
     fs::File::create(&*config::DATA_LOCATION)?;
-    fs::create_dir(&*config::APPS_LOCATION)?;
-    fs::create_dir(&*config::DESKTOP_FILES_LOCATION)?;
-    fs::create_dir(&*config::BIN_SYMLINK_LOCATION)?;
+    fs::create_dir_all(&*config::APPS_LOCATION)?;
+    fs::create_dir_all(&*config::DESKTOP_FILES_LOCATION)?;
+    fs::create_dir_all(&*config::BIN_SYMLINK_LOCATION)?;
     Ok(())
 }
 

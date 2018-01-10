@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 use std::env;
-use std::fs::File;
+use std::fs::{self, File};
 use std::ffi::OsString;
 use std::io::Write;
 use toml;
@@ -63,6 +63,7 @@ impl Config {
     }
 
     pub(crate) fn store(&self) -> Result<()> {
+        fs::create_dir_all(&*CONFIG_LOCATION.parent().unwrap())?;
         let mut f = File::create(&*CONFIG_LOCATION)?;
         f.write(&*toml::to_vec(self)?)?;
         Ok(())
