@@ -20,6 +20,7 @@ use std::fs::{self, File};
 use std::path::{Path, PathBuf};
 use std::io::{self, Read};
 use std::fmt;
+use::std::ffi::OsStr;
 
 use error::*;
 
@@ -132,4 +133,14 @@ fn untar<A: AsRef<Path>>(path: A) -> Result<Vec<PathBuf>> {
         },
         _ => Err(err_msg("Not a recognized archive format.")),
     }
+}
+
+fn add_symlink (dest: &PathBuf,symlink_name: &OsStr) -> Result<()>{
+    use config::Config;
+    use std::os::unix::fs;
+
+    let mut path = config::BIN_SYMLINK_LOCATION.to_path_buf();
+    path.push(symlink_name);
+    fs::symlink(dest, path);
+    Ok(())
 }
