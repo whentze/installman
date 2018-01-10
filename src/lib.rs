@@ -3,7 +3,6 @@
 #[macro_use]
 extern crate lazy_static;
 
-#[macro_use]
 extern crate failure;
 
 #[macro_use]
@@ -18,9 +17,8 @@ mod config;
 
 use std::fs::{self, File};
 use std::path::{Path, PathBuf};
-use std::io::{self, Read};
+use std::io::Read;
 use std::fmt;
-use::std::ffi::OsStr;
 
 use error::*;
 
@@ -123,9 +121,9 @@ pub fn init () -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn untar<A: AsRef<Path>>(path: A) -> Result<Vec<PathBuf>> {
     use TargetType::*;
-    use CompressionType::*;
 
     match classify_target(path)? {
         Archive => {
@@ -136,19 +134,17 @@ fn untar<A: AsRef<Path>>(path: A) -> Result<Vec<PathBuf>> {
 }
 
 fn add_symlink<A: AsRef<Path>>(dest: A,symlink_name: &str ) -> Result<()>{
-    use config::Config;
     use std::os::unix::fs;
 
     let mut path = config::BIN_SYMLINK_LOCATION.to_path_buf();
     path.push(symlink_name);
-    fs::symlink(dest, path);
+    fs::symlink(dest, path)?;
     Ok(())
 }
 
 fn get_app_name<A: AsRef<Path>>(path_app: A) -> Result<String> {
     use std::path::Path;
     use TargetType::*;
-    use ExecutableType::*;
 
     Ok(match classify_target(&path_app)?{
         Executable(_) => Path::file_stem(path_app.as_ref()).unwrap().to_string_lossy().into_owned(),
@@ -158,7 +154,6 @@ fn get_app_name<A: AsRef<Path>>(path_app: A) -> Result<String> {
 
 pub fn install_target<A: AsRef<Path>>(path: A) -> Result<()> {
     use TargetType::*;
-    use ExecutableType::*;
     match classify_target(&path)? {
         Executable(_) => { install_executable(&path)?; }
         _ => unimplemented!(),
@@ -167,7 +162,6 @@ pub fn install_target<A: AsRef<Path>>(path: A) -> Result<()> {
 }
 
 fn install_executable<A: AsRef<Path>>(path_exec: A) -> Result<()>{
-    use config::Config;
     use std::fs::copy;
 
     let app_name = get_app_name(&path_exec)?;
@@ -175,8 +169,8 @@ fn install_executable<A: AsRef<Path>>(path_exec: A) -> Result<()>{
     dest_path.push(&app_name);
     fs::create_dir_all(&dest_path)?;
     dest_path.push(&*path_exec.as_ref().file_name().unwrap());
-    copy(path_exec, &dest_path);
-    add_symlink(&dest_path, &app_name);
+    copy(path_exec, &dest_path)?;
+    add_symlink(&dest_path, &app_name)?;
     Ok(())
 }
 

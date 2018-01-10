@@ -1,7 +1,7 @@
 extern crate gtk;
 extern crate installman;
 use gtk::prelude::*;
-use installman::{classify_target, TargetType};
+use installman::classify_target;
 
 
 fn main() {
