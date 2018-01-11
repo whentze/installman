@@ -157,17 +157,16 @@ fn get_app_name<A: AsRef<Path>>(path_app: A) -> Result<String> {
     })
 }
 
-pub fn install_target<A: AsRef<Path>>(path: A) -> Result<()> {
+pub fn install_target<A: AsRef<Path>>(path: A) -> Result<(String)> {
     use TargetType::*;
     use ExecutableType::*;
-    match classify_target(&path)? {
-        Executable(_) => { install_executable(&path)?; }
+    Ok (match classify_target(&path)? {
+        Executable(_) => install_executable(&path)?,
         _ => unimplemented!(),
-    };
-    Ok(())
+    })
 }
 
-fn install_executable<A: AsRef<Path>>(path_exec: A) -> Result<()>{
+fn install_executable<A: AsRef<Path>>(path_exec: A) -> Result<(String)>{
     use config::Config;
     use std::fs::copy;
 
@@ -178,7 +177,7 @@ fn install_executable<A: AsRef<Path>>(path_exec: A) -> Result<()>{
     dest_path.push(&*path_exec.as_ref().file_name().unwrap());
     copy(path_exec, &dest_path);
     add_symlink(&dest_path, &app_name);
-    Ok(())
+    Ok((app_name))
 }
 
 
