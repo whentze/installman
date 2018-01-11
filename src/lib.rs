@@ -162,7 +162,7 @@ pub fn install_target<A: AsRef<Path>>(path: A) -> Result<(String)> {
     use ExecutableType::*;
     Ok (match classify_target(&path)? {
         Executable(_) => install_executable(&path)?,
-        _ => unimplemented!(),
+        _ => "Installation not possible".to_string(),
     })
 }
 
