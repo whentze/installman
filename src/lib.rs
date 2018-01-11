@@ -21,6 +21,7 @@ use std::path::{Path, PathBuf};
 use std::io::{self, Read};
 use std::fmt;
 use::std::ffi::OsStr;
+use config::{Data, Config};
 
 use error::*;
 
@@ -115,7 +116,7 @@ pub fn init () -> Result<()> {
     use config::Config;
 
     let config = Config::default();
-    config.store()?;
+    config.init()?;
     fs::File::create(&*config::DATA_LOCATION)?;
     fs::create_dir_all(&*config::APPS_LOCATION)?;
     fs::create_dir_all(&*config::DESKTOP_FILES_LOCATION)?;
@@ -179,7 +180,5 @@ fn install_executable<A: AsRef<Path>>(path_exec: A) -> Result<()>{
     add_symlink(&dest_path, &app_name);
     Ok(())
 }
-
-
 
 

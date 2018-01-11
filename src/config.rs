@@ -7,7 +7,7 @@ use toml;
 use error::*;
 
 lazy_static! {
-    static ref CONFIG_LOCATION : PathBuf = {
+    pub(crate) static ref CONFIG_LOCATION : PathBuf = {
         let mut path = env::home_dir().unwrap();
         path.push(".config/installman/config.toml");
         path
@@ -35,19 +35,45 @@ lazy_static! {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct App{
+pub(crate) struct App{
     name: OsString,
 }
 
 #[derive(Serialize, Deserialize, Debug, Default)]
-struct Data {
+pub(crate) struct Data {
+    path: PathBuf,
     installed_apps: Vec<App>,
+}
+
+impl Data {
+    fn init_store(&self) -> Result<()>{
+        fs::create_dir_all(&*DATA_LOCATION.parent().unwrap())?;
+        let mut f = File::create(&*DATA_LOCATION)?;
+        f.write(&*toml::to_vec(self)?)?;
+        Ok(())
+    }
+
+    fn store_data (&self) -> Result<()>{
+        let mut file = File::open(&self.path)?;
+        file.write(&*toml::to_vec(self)?)?;
+        Ok(())
+    }
+
+    fn get_data <A: AsRef<Path>>(path: A) -> Result<Data> {
+        use std::fs::File;
+        use std::io::Read;
+        let mut data_file = File::open(path)?;
+        let mut data_content = String::new();
+        data_file.read_to_string(&mut data_content)?;
+        let data: Data = toml::from_str(&data_content).unwrap();
+        Ok(data)
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct Config {
     apps_location: PathBuf,
-    data_location: PathBuf,
+    pub data_location: PathBuf,
     desktop_files_location: PathBuf,
     bin_symlink_location: PathBuf,
 }
@@ -62,11 +88,27 @@ impl Config {
         }
     }
 
-    pub(crate) fn store(&self) -> Result<()> {
+    pub(crate) fn init(&self) -> Result<()> {
         fs::create_dir_all(&*CONFIG_LOCATION.parent().unwrap())?;
         let mut f = File::create(&*CONFIG_LOCATION)?;
         f.write(&*toml::to_vec(self)?)?;
         Ok(())
+    }
+
+    fn store_config (&self) -> Result<()>{
+        let mut file = File::open(&*CONFIG_LOCATION)?;
+        file.write(&*toml::to_vec(self)?)?;
+        Ok(())
+    }
+
+    fn get_config () -> Result<Config> {
+        use std::fs::File;
+        use std::io::Read;
+        let mut config_file = File::open(&*CONFIG_LOCATION)?;
+        let mut config_content = String::new();
+        config_file.read_to_string(&mut config_content)?;
+        let config: Config = toml::from_str(&config_content).unwrap();
+        Ok(config)
     }
 }
 
