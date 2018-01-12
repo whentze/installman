@@ -35,7 +35,7 @@ lazy_static! {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub(crate) struct App{
+pub(crate) struct App {
     name: OsString,
 }
 
@@ -46,20 +46,20 @@ pub(crate) struct Data {
 }
 
 impl Data {
-    fn init_store(&self) -> Result<()>{
+    fn init_store(&self) -> Result<()> {
         fs::create_dir_all(&*DATA_LOCATION.parent().unwrap())?;
         let mut f = File::create(&*DATA_LOCATION)?;
         f.write(&*toml::to_vec(self)?)?;
         Ok(())
     }
 
-    fn store_data (&self) -> Result<()>{
+    fn store_data(&self) -> Result<()> {
         let mut file = File::open(&self.path)?;
         file.write(&*toml::to_vec(self)?)?;
         Ok(())
     }
 
-    fn get_data <A: AsRef<Path>>(path: A) -> Result<Data> {
+    fn get_data<A: AsRef<Path>>(path: A) -> Result<Data> {
         use std::fs::File;
         use std::io::Read;
         let mut data_file = File::open(path)?;
@@ -95,13 +95,13 @@ impl Config {
         Ok(())
     }
 
-    fn store_config (&self) -> Result<()>{
+    fn store_config(&self) -> Result<()> {
         let mut file = File::open(&*CONFIG_LOCATION)?;
         file.write(&*toml::to_vec(self)?)?;
         Ok(())
     }
 
-    fn get_config () -> Result<Config> {
+    fn get_config() -> Result<Config> {
         use std::fs::File;
         use std::io::Read;
         let mut config_file = File::open(&*CONFIG_LOCATION)?;

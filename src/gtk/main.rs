@@ -1,10 +1,11 @@
 extern crate gtk;
 extern crate installman;
 use gtk::prelude::*;
-use installman::{classify_target, install_target, TargetType};
+use installman::lib::{classify_target, install_target, TargetType};
 
 
 fn main() {
+    installman::lib::init();
     if gtk::init().is_err() {
         println!("Failed to initialize GTK.");
         return;
