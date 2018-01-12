@@ -13,7 +13,7 @@ extern crate serde;
 extern crate toml;
 extern crate tar;
 
-mod config;
+pub mod config;
 pub mod error;
 
 pub mod lib {
@@ -110,7 +110,7 @@ pub mod lib {
         })
     }
 
-    pub fn init() -> Result<()> {
+    pub fn init(conf: &mut super::config::Config,  data: &mut super::config::Data) -> Result<()> {
         use std::fs;
         use config::Config;
 
@@ -157,26 +157,30 @@ pub mod lib {
         })
     }
 
-    pub fn install_target<A: AsRef<Path>>(path: A) -> Result<(String)> {
+    pub fn install_target<A: AsRef<Path>>(data: &mut super::config::Data, path: A) -> Result<(String)> {
         use self::TargetType::*;
         use self::ExecutableType::*;
         match classify_target(&path)? {
-            Executable(_) => Ok(install_executable(&path)?),
+            Executable(_) => Ok(install_executable(data,&path)?),
             _ => Err(err_msg("Installation not possible")),
         }
     }
 
-    fn install_executable<A: AsRef<Path>>(path_exec: A) -> Result<(String)> {
-        use config::Config;
+    fn install_executable<A: AsRef<Path>>(data: &mut super::config::Data ,path_exec: A) -> Result<(String)> {
         use std::fs::copy;
-
-        let app_name = get_app_name(&path_exec)?;
+        use std::ffi::OsString;
+        let mut app_name = get_app_name(&path_exec)?;
         let mut dest_path = super::config::APPS_LOCATION.to_path_buf();
         dest_path.push(&app_name);
         fs::create_dir_all(&dest_path)?;
         dest_path.push(&*path_exec.as_ref().file_name().unwrap());
         copy(path_exec, &dest_path);
         add_symlink(&dest_path, &app_name);
+        let name: OsString = OsString::from(&app_name);
+        let mut new_app = super::config::App{name};
+        data.installed_apps.push(new_app);
+        println!("{:?}", data.installed_apps);
+        data.store_data();
         Ok((app_name))
     }
 }

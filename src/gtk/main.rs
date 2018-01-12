@@ -1,11 +1,14 @@
 extern crate gtk;
 extern crate installman;
+
 use gtk::prelude::*;
 use installman::lib::{classify_target, install_target, TargetType};
-
+use std::sync::{Arc, Mutex};
 
 fn main() {
-    installman::lib::init();
+    let main_data = Arc::new(Mutex::new(installman::config::Data::default()));
+    let mut main_config: installman::config::Config = installman::config::Config::default();
+    installman::lib::init(&mut main_config, &mut main_data.lock().unwrap());
     if gtk::init().is_err() {
         println!("Failed to initialize GTK.");
         return;
@@ -21,21 +24,27 @@ fn main() {
     window.show_all();
 
 
-    button_install.connect_clicked(move|_|{
+    button_install.connect_clicked(move |_| {
         //match file_chooser.get_filename(){
-            //debug code
-            //Some(x) => match classify_target(x) {
-            //    Ok(v) => label_file_chooser.set_text(&format!("File identified as: {}", v)),
-            //    Err(_) =>
-            //},
-            //None => label_file_chooser.set_text("Please select a file!")
+        //debug code
+        //Some(x) => match classify_target(x) {
+        //    Ok(v) => label_file_chooser.set_text(&format!("File identified as: {}", v)),
+        //    Err(_) =>
+        //},
+        //None => label_file_chooser.set_text("Please select a file!")
         //}
-        match install_target(file_chooser.get_filename().unwrap()){
-            Ok(x) => {
-                list_store.insert_with_values(Some(0), &[0, 1], &[&x, &"01.01.2100".to_string()]);
-            },
-            Err(_) => label_file_chooser.set_text("Installation Failed!"),
-        }
+        /*
+
+        */
+        match file_chooser.get_filename() {
+            Some(x) => match install_target(&mut main_data.lock().unwrap(), x) {
+                Ok(y) => {
+                    list_store.insert_with_values(Some(0), &[0, 1], &[&y, &"01.01.2100".to_string()]);
+                }
+                Err(_) => label_file_chooser.set_text("Installation Failed!"),
+            }
+            None => (),
+        };
     });
 
     window.connect_delete_event(move |_, _| {
@@ -43,4 +52,5 @@ fn main() {
         Inhibit(false)
     });
     gtk::main();
+    return;
 }

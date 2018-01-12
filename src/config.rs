@@ -5,6 +5,9 @@ use std::ffi::OsString;
 use std::io::Write;
 use toml;
 use error::*;
+use std::fs::OpenOptions;
+use std::io::prelude::*;
+
 
 lazy_static! {
     pub(crate) static ref CONFIG_LOCATION : PathBuf = {
@@ -35,14 +38,24 @@ lazy_static! {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub(crate) struct App {
-    name: OsString,
+pub struct App {
+    pub name: OsString,
 }
 
+/*
+impl App {
+    pub fn new<A: AsRef<OsString>> (n: A) -> Self {
+        App{
+        name: n.as_ref().to_os_string(),
+        }
+    }
+}
+*/
+
 #[derive(Serialize, Deserialize, Debug, Default)]
-pub(crate) struct Data {
-    path: PathBuf,
-    installed_apps: Vec<App>,
+pub struct Data {
+    pub path: PathBuf,
+    pub installed_apps: Vec<App>,
 }
 
 impl Data {
@@ -53,13 +66,31 @@ impl Data {
         Ok(())
     }
 
-    fn store_data(&self) -> Result<()> {
-        let mut file = File::open(&self.path)?;
+    pub fn store_data(&self) -> Result<()> {
+        let mut file = ::std::fs::OpenOptions::new().write(true).open(&*DATA_LOCATION)?;
         file.write(&*toml::to_vec(self)?)?;
+        /*
+        match OpenOptions::new().append(true).open(LOG_FILE) {
+            Ok(ref mut file) => {
+                writeln!(
+                    file,
+                    "Hello!"
+                ).is_ok();
+            },
+            Err(err) => { panic!("Failed to open log file: {}", err); }
+        }
+*/
+
+
+
+        /*
+                let mut file = File::open(&*DATA_LOCATION)?;
+                file.write_all(&*toml::to_vec(self)?)?;
+          */
         Ok(())
     }
 
-    fn get_data<A: AsRef<Path>>(path: A) -> Result<Data> {
+    pub fn get_data<A: AsRef<Path>>(&self, path: A) -> Result<Data> {
         use std::fs::File;
         use std::io::Read;
         let mut data_file = File::open(path)?;
@@ -70,8 +101,9 @@ impl Data {
     }
 }
 
+
 #[derive(Serialize, Deserialize, Debug)]
-pub(crate) struct Config {
+pub struct Config {
     apps_location: PathBuf,
     pub data_location: PathBuf,
     desktop_files_location: PathBuf,
