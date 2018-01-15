@@ -4,7 +4,7 @@ extern crate clap;
 extern crate installman;
 
 use clap::{Arg, ArgMatches, SubCommand, AppSettings};
-use installman::{classify_target, error::{err_msg, Result}};
+use installman::{lib::classify_target, error::{err_msg, Result}};
 
 fn main() {
     let matches = app_from_crate!()
@@ -33,16 +33,16 @@ fn main() {
         });
     }
 }
-
+//Attention: edit implementation for use of init() and install_target()
 fn run_subcommand(subcommand: &str, matches: &ArgMatches) -> Result<()> {
     match subcommand {
         "install" => {
             let target = matches.value_of("file").unwrap();
             println!("File identified as: {}", classify_target(target)?);
-            installman::install_target(target)?;
+            //installman::lib::install_target(target)?;
         },
         "init" => {
-            installman::init()?
+            //installman::lib::init()?
         },
         _ => return Err(err_msg("Unknown subcommand")),
     };
