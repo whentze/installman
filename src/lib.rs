@@ -166,7 +166,6 @@ pub mod lib {
 
     fn install_executable<A: AsRef<Path>>(data: &mut super::config::Data ,path_exec: A) -> Result<(String)> {
         use std::fs::copy;
-        use std::ffi::OsString;
 
         let mut app_name = get_app_name(&path_exec)?;
         let mut dest_path = super::config::APPS_LOCATION.to_path_buf();
@@ -177,8 +176,7 @@ pub mod lib {
         copy(path_exec, &dest_path);
         add_symlink(&dest_path, &app_name);
 
-        let name: OsString = OsString::from(&app_name);
-        let mut new_app = super::config::App{name};
+        let mut new_app = super::config::App{name: app_name.clone()};
         data.installed_apps.push(new_app);
         data.store_data();
         println!("installed {}", app_name);

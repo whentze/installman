@@ -1,7 +1,6 @@
 use std::path::{Path, PathBuf};
 use std::env;
 use std::fs::{self, File};
-use std::ffi::OsString;
 use std::io::Write;
 use std::sync::RwLock;
 use toml;
@@ -46,12 +45,12 @@ lazy_static! {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct App {
-    pub name: OsString,
+    pub name: String,
 }
 
 /*
 impl App {
-    pub fn new<A: AsRef<OsString>> (n: A) -> Self {
+    pub fn new<A: AsRef<String>> (n: A) -> Self {
         App{
         name: n.as_ref().to_os_string(),
         }
