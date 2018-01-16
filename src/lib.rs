@@ -3,7 +3,8 @@
 #[macro_use]
 extern crate lazy_static;
 
-extern crate failure;
+#[macro_use]
+extern crate error_chain;
 
 #[macro_use]
 extern crate serde_derive;
@@ -125,7 +126,7 @@ pub mod lib {
             Archive => {
                 unimplemented!()
             },
-            _ => Err(err_msg("Not a recognized archive format.")),
+            _ => Err(ErrorKind::UnrecognizedArchiveFormat.into()),
         }
     }
 
@@ -153,7 +154,7 @@ pub mod lib {
 
         match classify_target(&path)? {
             Executable(_) => Ok(install_executable(&path)?),
-            _ => Err(err_msg("Installation not possible")),
+            _ => Err(ErrorKind::TargetTypeNotSupported.into()),
         }
     }
 

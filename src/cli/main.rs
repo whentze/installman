@@ -4,7 +4,7 @@ extern crate clap;
 extern crate installman;
 
 use clap::{Arg, ArgMatches, SubCommand, AppSettings};
-use installman::{lib::classify_target, error::{err_msg, Result}};
+use installman::{lib::classify_target, error::*};
 
 fn main() {
     let matches = app_from_crate!()
@@ -44,7 +44,7 @@ fn run_subcommand(subcommand: &str, matches: &ArgMatches) -> Result<()> {
         "init" => {
             //installman::lib::init()?
         },
-        _ => return Err(err_msg("Unknown subcommand")),
+        _ => return Err("unknown subcommand".into()),
     };
     Ok(())
 }
