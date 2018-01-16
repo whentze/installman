@@ -22,7 +22,7 @@ fn main() {
     let window: gtk::ApplicationWindow = builder.get_object("main_window").unwrap();
     window.show_all();
 
-    for element in DATA.read().unwrap().installed_apps.iter(){
+    for element in DATA.read().unwrap().installed_apps.iter() {
         list_store.insert_with_values(Some(0), &[0, 1], &[&element.name, &"lol".to_string()]);
     }
 
@@ -31,12 +31,25 @@ fn main() {
             Some(x) => match install_target(x) {
                 Ok(y) => {
                     list_store.insert_with_values(Some(0), &[0, 1], &[&y, &"01.01.2100".to_string()]);
-                }
-                Err(Error(AlreadyInstalled(_), _)) => label_file_chooser.set_text("App already exists!"),
-                Err(Error(TargetTypeNotSupported, _)) => label_file_chooser.set_text("Target type is not supported!"),
-                Err(e) => {label_file_chooser.set_text("Installation Failed!");
-                            eprintln!("{:?}", e);
                 },
+                Err(Error(AlreadyInstalled(_), _)) => {
+                    label_file_chooser.set_text("App already exists!");
+                    let dialog: gtk::Dialog = builder.get_object("dialog_already_installed").unwrap();
+                    let radio_button_1: gtk::RadioButton = builder.get_object("dialog_already_installed_radiobutton_1").unwrap();
+                    let text_entry: gtk::Entry = builder.get_object("dialog_already_installed_textentry").unwrap();
+                    let radio_button_2: gtk::RadioButton = builder.get_object("dialog_already_installed_radiobutton_2").unwrap();
+                    let button_cancel: gtk::Button = builder.get_object("dialog_already_installed_cancel").unwrap();
+                    let button_ok: gtk::Button = builder.get_object("dialog_already_installed_ok").unwrap();
+                    dialog.show_all();
+                    button_cancel.connect_clicked(move |_| {
+                        dialog.destroy();
+                    });
+                },
+                Err(Error(TargetTypeNotSupported, _)) => label_file_chooser.set_text("Target type is not supported!"),
+                Err(e) => {
+                    label_file_chooser.set_text("Installation Failed!");
+                    eprintln!("{:?}", e);
+                }
             }
             None => (),
         };
