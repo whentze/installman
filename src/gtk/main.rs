@@ -2,13 +2,12 @@ extern crate gtk;
 extern crate installman;
 
 use gtk::prelude::*;
-use installman::lib::{classify_target, install_target, TargetType};
-use installman::config::CONFIG;
+use installman::lib::install_target;
 use std::sync::{Arc, Mutex};
 
 fn main() {
     let main_data = Arc::new(Mutex::new(installman::config::Data::default()));
-    installman::lib::init(&mut main_data.lock().unwrap()).unwrap();
+    installman::lib::init().unwrap();
     if gtk::init().is_err() {
         println!("Failed to initialize GTK.");
         return;
@@ -25,17 +24,6 @@ fn main() {
 
 
     button_install.connect_clicked(move |_| {
-        //match file_chooser.get_filename(){
-        //debug code
-        //Some(x) => match classify_target(x) {
-        //    Ok(v) => label_file_chooser.set_text(&format!("File identified as: {}", v)),
-        //    Err(_) =>
-        //},
-        //None => label_file_chooser.set_text("Please select a file!")
-        //}
-        /*
-
-        */
         match file_chooser.get_filename() {
             Some(x) => match install_target(&mut main_data.lock().unwrap(), x) {
                 Ok(y) => {

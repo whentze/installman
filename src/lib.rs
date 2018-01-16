@@ -3,7 +3,6 @@
 #[macro_use]
 extern crate lazy_static;
 
-#[macro_use]
 extern crate failure;
 
 #[macro_use]
@@ -19,10 +18,8 @@ pub mod error;
 pub mod lib {
     use std::fs::{self, File};
     use std::path::{Path, PathBuf};
-    use std::io::{self, Read};
+    use std::io::Read;
     use std::fmt;
-    use ::std::ffi::OsStr;
-
     use error::*;
 
     pub enum TargetType {
@@ -110,7 +107,7 @@ pub mod lib {
         })
     }
 
-    pub fn init(data: &mut super::config::Data) -> Result<()> {
+    pub fn init() -> Result<()> {
         use std::fs;
         use config::CONFIG;
 
@@ -124,7 +121,6 @@ pub mod lib {
 
     fn untar<A: AsRef<Path>>(path: A) -> Result<Vec<PathBuf>> {
         use self::TargetType::*;
-        use self::CompressionType::*;
 
         match classify_target(path)? {
             Archive => {
@@ -135,7 +131,6 @@ pub mod lib {
     }
 
     fn add_symlink<A: AsRef<Path>>(dest: A, symlink_name: &str) -> Result<()> {
-        use config::Config;
         use std::os::unix::fs;
 
         let mut path = super::config::BIN_SYMLINK_LOCATION.to_path_buf();
@@ -147,7 +142,6 @@ pub mod lib {
     fn get_app_name<A: AsRef<Path>>(path_app: A) -> Result<String> {
         use std::path::Path;
         use self::TargetType::*;
-        use self::ExecutableType::*;
 
         Ok(match classify_target(&path_app)? {
             Executable(_) => Path::file_stem(path_app.as_ref()).unwrap().to_string_lossy().into_owned(),
@@ -157,7 +151,7 @@ pub mod lib {
 
     pub fn install_target<A: AsRef<Path>>(data: &mut super::config::Data, path: A) -> Result<(String)> {
         use self::TargetType::*;
-        use self::ExecutableType::*;
+
         match classify_target(&path)? {
             Executable(_) => Ok(install_executable(data,&path)?),
             _ => Err(err_msg("Installation not possible")),
@@ -167,7 +161,7 @@ pub mod lib {
     fn install_executable<A: AsRef<Path>>(data: &mut super::config::Data ,path_exec: A) -> Result<(String)> {
         use std::fs::copy;
 
-        let mut app_name = get_app_name(&path_exec)?;
+        let app_name = get_app_name(&path_exec)?;
         let mut dest_path = super::config::APPS_LOCATION.to_path_buf();
         dest_path.push(&app_name);
 
@@ -176,7 +170,7 @@ pub mod lib {
         copy(path_exec, &dest_path);
         add_symlink(&dest_path, &app_name);
 
-        let mut new_app = super::config::App{name: app_name.clone()};
+        let new_app = super::config::App{name: app_name.clone()};
         data.installed_apps.push(new_app);
         data.store_data();
         println!("installed {}", app_name);
