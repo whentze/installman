@@ -111,8 +111,6 @@ pub mod lib {
         use std::fs;
         use config::CONFIG;
 
-        fs::File::create(&CONFIG.read().unwrap().data_location)?;
-
         fs::create_dir_all(&CONFIG.read().unwrap().apps_location)?;
         fs::create_dir_all(&CONFIG.read().unwrap().desktop_files_location)?;
         fs::create_dir_all(&CONFIG.read().unwrap().bin_symlink_location)?;
