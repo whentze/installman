@@ -3,6 +3,7 @@ extern crate installman;
 
 use gtk::prelude::*;
 use installman::lib::install_target;
+use installman::config::DATA;
 
 fn main() {
     installman::lib::init().unwrap();
@@ -20,6 +21,9 @@ fn main() {
     let window: gtk::ApplicationWindow = builder.get_object("main_window").unwrap();
     window.show_all();
 
+    for element in DATA.read().unwrap().installed_apps.iter(){
+        list_store.insert_with_values(Some(0), &[0, 1], &[&element.name, &"lol".to_string()]);
+    }
 
     button_install.connect_clicked(move |_| {
         match file_chooser.get_filename() {

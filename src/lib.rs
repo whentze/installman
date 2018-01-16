@@ -162,6 +162,8 @@ pub mod lib {
         use config::{DATA, Data};
 
         let app_name = get_app_name(&path_exec)?;
+        println!("{:?}", app_exists(&app_name));
+
         let mut dest_path = super::config::APPS_LOCATION.to_path_buf();
         dest_path.push(&app_name);
 
@@ -174,5 +176,11 @@ pub mod lib {
         DATA.write().unwrap().installed_apps.push(new_app);
         Data::store()?;
         Ok((app_name))
+    }
+
+    fn app_exists(name: &str) -> bool{
+        use config::DATA;
+
+        DATA.read().unwrap().installed_apps.iter().any(|x| x.name == name)
     }
 }
