@@ -19,7 +19,7 @@ pub mod error;
 pub mod lib {
     use std::fs::{self, File};
     use std::path::{Path, PathBuf};
-    use std::io::Read;
+    use std::io::{Read, Write};
     use std::fmt;
     use error::*;
     use config::{CONFIG, DATA, Data};
@@ -181,5 +181,26 @@ pub mod lib {
 
     fn app_exists(name: &str) -> bool{
         DATA.read().unwrap().installed_apps.iter().any(|x| x.name == name)
+    }
+
+    fn create_desktop_file(name: &str) -> Result<()> {
+        let content = format!("\
+            [Desktop Entry]\n\
+            Type=Application\n\
+            Version=1.1\n\
+            Name={name}\n\
+            Path={path}\n\
+            Comment=Brought to you by installman!\n\
+            Exec={exec}\n\
+            TryExec={exec}",
+            name=name,
+            path=&CONFIG.read().unwrap().apps_location.join(name).to_string_lossy(),
+            exec=&CONFIG.read().unwrap().bin_symlink_location.join(name).to_string_lossy());
+        let mut file = File::create(&CONFIG.read().unwrap()
+            .desktop_files_location
+            .join(name)
+            .with_extension(".desktop"))?;
+        file.write_all(content.as_bytes())?;
+        Ok(())
     }
 }
