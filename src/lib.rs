@@ -110,7 +110,7 @@ pub mod lib {
         })
     }
 
-    pub fn init(data: &mut super::config::Data) -> Result<()> {
+    pub fn init() -> Result<()> {
         use std::fs;
         use config::CONFIG;
 
@@ -155,17 +155,18 @@ pub mod lib {
         })
     }
 
-    pub fn install_target<A: AsRef<Path>>(data: &mut super::config::Data, path: A) -> Result<(String)> {
+    pub fn install_target<A: AsRef<Path>>(path: A) -> Result<(String)> {
         use self::TargetType::*;
         use self::ExecutableType::*;
         match classify_target(&path)? {
-            Executable(_) => Ok(install_executable(data,&path)?),
+            Executable(_) => Ok(install_executable(&path)?),
             _ => Err(err_msg("Installation not possible")),
         }
     }
 
-    fn install_executable<A: AsRef<Path>>(data: &mut super::config::Data ,path_exec: A) -> Result<(String)> {
+    fn install_executable<A: AsRef<Path>>(path_exec: A) -> Result<(String)> {
         use std::fs::copy;
+        use config::{DATA, Data};
 
         let mut app_name = get_app_name(&path_exec)?;
         let mut dest_path = super::config::APPS_LOCATION.to_path_buf();
@@ -177,9 +178,8 @@ pub mod lib {
         add_symlink(&dest_path, &app_name);
 
         let mut new_app = super::config::App{name: app_name.clone()};
-        data.installed_apps.push(new_app);
-        data.store_data();
-        println!("installed {}", app_name);
+        DATA.write().unwrap().installed_apps.push(new_app);
+        Data::store()?;
         Ok((app_name))
     }
 }

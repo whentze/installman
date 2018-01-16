@@ -3,12 +3,10 @@ extern crate installman;
 
 use gtk::prelude::*;
 use installman::lib::{classify_target, install_target, TargetType};
-use installman::config::CONFIG;
-use std::sync::{Arc, Mutex};
+use installman::config::DATA;
 
 fn main() {
-    let main_data = Arc::new(Mutex::new(installman::config::Data::default()));
-    installman::lib::init(&mut main_data.lock().unwrap()).unwrap();
+    installman::lib::init().unwrap();
     if gtk::init().is_err() {
         println!("Failed to initialize GTK.");
         return;
@@ -37,7 +35,7 @@ fn main() {
 
         */
         match file_chooser.get_filename() {
-            Some(x) => match install_target(&mut main_data.lock().unwrap(), x) {
+            Some(x) => match install_target(x) {
                 Ok(y) => {
                     list_store.insert_with_values(Some(0), &[0, 1], &[&y, &"01.01.2100".to_string()]);
                 }
