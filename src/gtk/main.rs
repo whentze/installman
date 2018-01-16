@@ -4,6 +4,7 @@ extern crate installman;
 use gtk::prelude::*;
 use installman::lib::install_target;
 use installman::config::DATA;
+use installman::error::*;
 
 fn main() {
     installman::lib::init().unwrap();
@@ -31,6 +32,8 @@ fn main() {
                 Ok(y) => {
                     list_store.insert_with_values(Some(0), &[0, 1], &[&y, &"01.01.2100".to_string()]);
                 }
+                Err(Error(AlreadyInstalled(_), _)) => label_file_chooser.set_text("App already exists!"),
+                Err(Error(TargetTypeNotSupported, _)) => label_file_chooser.set_text("Target type is not supported!"),
                 Err(e) => {label_file_chooser.set_text("Installation Failed!");
                             eprintln!("{:?}", e);
                 },
