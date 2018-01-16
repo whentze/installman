@@ -3,7 +3,9 @@ use std::env;
 use std::fs::{self, File};
 use std::ffi::OsString;
 use std::io::Write;
+use std::sync::RwLock;
 use toml;
+use serde::Serialize;
 use error::*;
 use std::fs::OpenOptions;
 use std::io::prelude::*;
@@ -35,7 +37,12 @@ lazy_static! {
         path.push("bin");
         path
     };
+
+    pub static ref CONFIG : RwLock<Config> = {
+        RwLock::new(Config::get())
+    };
 }
+
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct App {
@@ -104,10 +111,10 @@ impl Data {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
-    apps_location: PathBuf,
+    pub apps_location: PathBuf,
     pub data_location: PathBuf,
-    desktop_files_location: PathBuf,
-    bin_symlink_location: PathBuf,
+    pub desktop_files_location: PathBuf,
+    pub bin_symlink_location: PathBuf,
 }
 
 impl Config {
@@ -120,35 +127,38 @@ impl Config {
         }
     }
 
-    pub(crate) fn init(&self) -> Result<()> {
-        fs::create_dir_all(&*CONFIG_LOCATION.parent().unwrap())?;
-        let mut f = File::create(&*CONFIG_LOCATION)?;
-        f.write(&*toml::to_vec(self)?)?;
+    fn store() -> Result<()> {
+        store_file(&*CONFIG, &*CONFIG_LOCATION);
         Ok(())
     }
 
-    fn store_config(&self) -> Result<()> {
-        let mut file = File::open(&*CONFIG_LOCATION)?;
-        file.write(&*toml::to_vec(self)?)?;
-        Ok(())
+    fn get() -> Config {
+        fs::create_dir_all(&*CONFIG_LOCATION.parent().unwrap()).unwrap();
+        match File::open(&*CONFIG_LOCATION) {
+            Ok(mut file) => {
+                let mut buf = String::new();
+                file.read_to_string(&mut buf);
+                toml::from_str::<Config>(&buf).unwrap_or(Config::default())
+            }
+            Err(_) => {
+                File::create(&*CONFIG_LOCATION).unwrap();
+                let conf = Config::default();
+                store_file(&conf, &*CONFIG_LOCATION).unwrap();
+                conf
+            }
+        }
     }
 
-    fn get_config() -> Result<Config> {
-        use std::fs::File;
-        use std::io::Read;
-        let mut config_file = File::open(&*CONFIG_LOCATION)?;
-        let mut config_content = String::new();
-        config_file.read_to_string(&mut config_content)?;
-        let config: Config = toml::from_str(&config_content).unwrap();
-        Ok(config)
-    }
-}
-
-impl Default for Config {
     fn default() -> Self {
         Config::new(&*APPS_LOCATION,
                     &*DATA_LOCATION,
                     &*DESKTOP_FILES_LOCATION,
                     &*BIN_SYMLINK_LOCATION)
     }
+}
+
+fn store_file<S : Serialize>(s: &S, path: &Path) -> Result<()> {
+    let mut file = OpenOptions::new().truncate(true).open(path)?;
+    file.write(&*toml::to_vec(&s)?)?;
+    Ok(())
 }

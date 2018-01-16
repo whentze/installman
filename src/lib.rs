@@ -110,17 +110,15 @@ pub mod lib {
         })
     }
 
-    pub fn init(conf: &mut super::config::Config,  data: &mut super::config::Data) -> Result<()> {
+    pub fn init(data: &mut super::config::Data) -> Result<()> {
         use std::fs;
-        use config::Config;
+        use config::CONFIG;
 
-        let config = Config::default();
-        config.init()?;
-        fs::File::create(&*super::config::DATA_LOCATION)?;
+        fs::File::create(&CONFIG.read().unwrap().data_location)?;
 
-        fs::create_dir_all(&*super::config::APPS_LOCATION)?;
-        fs::create_dir_all(&*super::config::DESKTOP_FILES_LOCATION)?;
-        fs::create_dir_all(&*super::config::BIN_SYMLINK_LOCATION)?;
+        fs::create_dir_all(&CONFIG.read().unwrap().apps_location)?;
+        fs::create_dir_all(&CONFIG.read().unwrap().desktop_files_location)?;
+        fs::create_dir_all(&CONFIG.read().unwrap().bin_symlink_location)?;
         Ok(())
     }
 
@@ -169,18 +167,21 @@ pub mod lib {
     fn install_executable<A: AsRef<Path>>(data: &mut super::config::Data ,path_exec: A) -> Result<(String)> {
         use std::fs::copy;
         use std::ffi::OsString;
+
         let mut app_name = get_app_name(&path_exec)?;
         let mut dest_path = super::config::APPS_LOCATION.to_path_buf();
         dest_path.push(&app_name);
+
         fs::create_dir_all(&dest_path)?;
         dest_path.push(&*path_exec.as_ref().file_name().unwrap());
         copy(path_exec, &dest_path);
         add_symlink(&dest_path, &app_name);
+
         let name: OsString = OsString::from(&app_name);
         let mut new_app = super::config::App{name};
         data.installed_apps.push(new_app);
-        println!("{:?}", data.installed_apps);
         data.store_data();
+        println!("installed {}", app_name);
         Ok((app_name))
     }
 }

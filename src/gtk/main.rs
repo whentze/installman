@@ -3,12 +3,12 @@ extern crate installman;
 
 use gtk::prelude::*;
 use installman::lib::{classify_target, install_target, TargetType};
+use installman::config::CONFIG;
 use std::sync::{Arc, Mutex};
 
 fn main() {
     let main_data = Arc::new(Mutex::new(installman::config::Data::default()));
-    let mut main_config: installman::config::Config = installman::config::Config::default();
-    installman::lib::init(&mut main_config, &mut main_data.lock().unwrap());
+    installman::lib::init(&mut main_data.lock().unwrap()).unwrap();
     if gtk::init().is_err() {
         println!("Failed to initialize GTK.");
         return;
