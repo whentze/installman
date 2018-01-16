@@ -22,7 +22,7 @@ pub mod lib {
     use std::io::Read;
     use std::fmt;
     use error::*;
-    use config::CONFIG;
+    use config::{CONFIG, DATA, Data};
 
     pub enum TargetType {
         Executable(ExecutableType),
@@ -160,7 +160,6 @@ pub mod lib {
 
     fn install_executable<A: AsRef<Path>>(path_exec: A) -> Result<(String)> {
         use std::fs::copy;
-        use config::{DATA, Data};
 
         let app_name = get_app_name(&path_exec)?;
         if app_exists(&app_name) {
@@ -181,8 +180,6 @@ pub mod lib {
     }
 
     fn app_exists(name: &str) -> bool{
-        use config::DATA;
-
         DATA.read().unwrap().installed_apps.iter().any(|x| x.name == name)
     }
 }
