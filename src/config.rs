@@ -11,27 +11,27 @@ use std::io::prelude::*;
 
 
 lazy_static! {
-    pub(crate) static ref CONFIG_LOCATION : PathBuf = {
+    static ref CONFIG_LOCATION : PathBuf = {
         let mut path = env::home_dir().unwrap();
         path.push(".config/installman/config.toml");
         path
     };
-    pub(crate) static ref DATA_LOCATION : PathBuf = {
+    static ref DATA_LOCATION : PathBuf = {
         let mut path = env::home_dir().unwrap();
         path.push(".config/installman/data.toml");
         path
     };
-    pub(crate) static ref APPS_LOCATION : PathBuf = {
+    static ref APPS_LOCATION : PathBuf = {
         let mut path = env::home_dir().unwrap();
         path.push("installman_apps");
         path
     };
-    pub(crate) static ref DESKTOP_FILES_LOCATION : PathBuf = {
+    static ref DESKTOP_FILES_LOCATION : PathBuf = {
         let mut path = env::home_dir().unwrap();
         path.push(".local/share/applications");
         path
     };
-    pub(crate) static ref BIN_SYMLINK_LOCATION : PathBuf = {
+    static ref BIN_SYMLINK_LOCATION : PathBuf = {
         let mut path = env::home_dir().unwrap();
         path.push("bin");
         path

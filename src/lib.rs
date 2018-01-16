@@ -21,6 +21,7 @@ pub mod lib {
     use std::io::Read;
     use std::fmt;
     use error::*;
+    use config::CONFIG;
 
     pub enum TargetType {
         Executable(ExecutableType),
@@ -109,7 +110,6 @@ pub mod lib {
 
     pub fn init() -> Result<()> {
         use std::fs;
-        use config::CONFIG;
 
         fs::create_dir_all(&CONFIG.read().unwrap().apps_location)?;
         fs::create_dir_all(&CONFIG.read().unwrap().desktop_files_location)?;
@@ -132,7 +132,7 @@ pub mod lib {
     fn add_symlink<A: AsRef<Path>>(dest: A, symlink_name: &str) -> Result<()> {
         use std::os::unix::fs;
 
-        let mut path = super::config::BIN_SYMLINK_LOCATION.to_path_buf();
+        let mut path = (&CONFIG.read().unwrap().bin_symlink_location).clone();
         path.push(symlink_name);
         fs::symlink(dest, path)?;
         Ok(())
@@ -163,8 +163,7 @@ pub mod lib {
 
         let app_name = get_app_name(&path_exec)?;
         println!("{:?}", app_exists(&app_name));
-
-        let mut dest_path = super::config::APPS_LOCATION.to_path_buf();
+        let mut dest_path = (&CONFIG.read().unwrap().apps_location).clone();
         dest_path.push(&app_name);
 
         fs::create_dir_all(&dest_path)?;
