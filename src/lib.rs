@@ -163,7 +163,9 @@ pub mod lib {
         use config::{DATA, Data};
 
         let app_name = get_app_name(&path_exec)?;
-        println!("{:?}", app_exists(&app_name));
+        if app_exists(&app_name) {
+            return Err(ErrorKind::AppAlreadyInstalled(app_name).into());
+        }
         let mut dest_path = (&CONFIG.read().unwrap().apps_location).clone();
         dest_path.push(&app_name);
 
