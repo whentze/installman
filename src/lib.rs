@@ -119,6 +119,7 @@ pub mod lib {
         Ok(())
     }
 
+    #[allow(dead_code)]
     fn untar<A: AsRef<Path>>(path: A) -> Result<Vec<PathBuf>> {
         use self::TargetType::*;
 
@@ -135,7 +136,7 @@ pub mod lib {
 
         let mut path = super::config::BIN_SYMLINK_LOCATION.to_path_buf();
         path.push(symlink_name);
-        fs::symlink(dest, path);
+        fs::symlink(dest, path)?;
         Ok(())
     }
 
@@ -149,17 +150,18 @@ pub mod lib {
         })
     }
 
-    pub fn install_target<A: AsRef<Path>>(data: &mut super::config::Data, path: A) -> Result<(String)> {
+    pub fn install_target<A: AsRef<Path>>(path: A) -> Result<(String)> {
         use self::TargetType::*;
 
         match classify_target(&path)? {
-            Executable(_) => Ok(install_executable(data,&path)?),
+            Executable(_) => Ok(install_executable(&path)?),
             _ => Err(err_msg("Installation not possible")),
         }
     }
 
-    fn install_executable<A: AsRef<Path>>(data: &mut super::config::Data ,path_exec: A) -> Result<(String)> {
+    fn install_executable<A: AsRef<Path>>(path_exec: A) -> Result<(String)> {
         use std::fs::copy;
+        use config::{DATA, Data};
 
         let app_name = get_app_name(&path_exec)?;
         let mut dest_path = super::config::APPS_LOCATION.to_path_buf();
@@ -167,13 +169,12 @@ pub mod lib {
 
         fs::create_dir_all(&dest_path)?;
         dest_path.push(&*path_exec.as_ref().file_name().unwrap());
-        copy(path_exec, &dest_path);
+        copy(path_exec, &dest_path)?;
         add_symlink(&dest_path, &app_name);
 
         let new_app = super::config::App{name: app_name.clone()};
-        data.installed_apps.push(new_app);
-        data.store_data();
-        println!("installed {}", app_name);
+        DATA.write().unwrap().installed_apps.push(new_app);
+        Data::store()?;
         Ok((app_name))
     }
 }

@@ -40,6 +40,10 @@ lazy_static! {
     pub static ref CONFIG : RwLock<Config> = {
         RwLock::new(Config::get())
     };
+
+    pub static ref DATA : RwLock<Data> = {
+        RwLock::new(Data::get())
+    };
 }
 
 
@@ -65,45 +69,27 @@ pub struct Data {
 }
 
 impl Data {
-    fn init_store(&self) -> Result<()> {
-        fs::create_dir_all(&*DATA_LOCATION.parent().unwrap())?;
-        let mut f = File::create(&*DATA_LOCATION)?;
-        f.write(&*toml::to_vec(self)?)?;
+    pub fn store() -> Result<()> {
+        let data_location = CONFIG.read().unwrap().data_location.clone();
+        store_file(&*DATA, &data_location)?;
         Ok(())
     }
-
-    pub fn store_data(&self) -> Result<()> {
-        let mut file = ::std::fs::OpenOptions::new().write(true).open(&*DATA_LOCATION)?;
-        file.write(&*toml::to_vec(self)?)?;
-        /*
-        match OpenOptions::new().append(true).open(LOG_FILE) {
-            Ok(ref mut file) => {
-                writeln!(
-                    file,
-                    "Hello!"
-                ).is_ok();
-            },
-            Err(err) => { panic!("Failed to open log file: {}", err); }
+    fn get() -> Data {
+        let data_location = CONFIG.read().unwrap().data_location.clone();
+        fs::create_dir_all(data_location.parent().unwrap()).unwrap();
+        match File::open(&data_location) {
+            Ok(mut file) => {
+                let mut buf = String::new();
+                file.read_to_string(&mut buf).unwrap();
+                toml::from_str::<Data>(&buf).unwrap_or(Data::default())
+            }
+            Err(_) => {
+                File::create(&data_location).unwrap();
+                let data = Data::default();
+                store_file(&data, &data_location).unwrap();
+                data
+            }
         }
-*/
-
-
-
-        /*
-                let mut file = File::open(&*DATA_LOCATION)?;
-                file.write_all(&*toml::to_vec(self)?)?;
-          */
-        Ok(())
-    }
-
-    pub fn get_data<A: AsRef<Path>>(&self, path: A) -> Result<Data> {
-        use std::fs::File;
-        use std::io::Read;
-        let mut data_file = File::open(path)?;
-        let mut data_content = String::new();
-        data_file.read_to_string(&mut data_content)?;
-        let data: Data = toml::from_str(&data_content).unwrap();
-        Ok(data)
     }
 }
 
@@ -126,8 +112,9 @@ impl Config {
         }
     }
 
+    #[allow(dead_code)]
     fn store() -> Result<()> {
-        store_file(&*CONFIG, &*CONFIG_LOCATION);
+        store_file(&*CONFIG, &*CONFIG_LOCATION).unwrap();
         Ok(())
     }
 
@@ -136,7 +123,7 @@ impl Config {
         match File::open(&*CONFIG_LOCATION) {
             Ok(mut file) => {
                 let mut buf = String::new();
-                file.read_to_string(&mut buf);
+                file.read_to_string(&mut buf).unwrap();
                 toml::from_str::<Config>(&buf).unwrap_or(Config::default())
             }
             Err(_) => {
@@ -157,7 +144,8 @@ impl Config {
 }
 
 fn store_file<S : Serialize>(s: &S, path: &Path) -> Result<()> {
-    let mut file = OpenOptions::new().truncate(true).open(path)?;
-    file.write(&*toml::to_vec(&s)?)?;
+    let mut file = OpenOptions::new().write(true).truncate(true).open(path)?;
+    let bytes = &*toml::to_vec(&s)?;
+    file.write(bytes)?;
     Ok(())
 }
