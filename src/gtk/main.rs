@@ -6,7 +6,7 @@ use installman::lib::install_target;
 use installman::config::DATA;
 use installman::error::*;
 use std::sync::mpsc::channel;
-
+use std::path::PathBuf;
 
 fn main() {
     installman::lib::init().unwrap();
@@ -36,55 +36,78 @@ fn main() {
 
     let (tx, rx) = channel();
     let tx2 = tx.clone();
+    let tx3 = tx.clone();
+
 
     let dialog2 = dialog.clone();
     let dialog3 = dialog.clone();
+    let dialog4 = dialog.clone();
 
-    let rb1_1 = radio_button_1.clone();
+    let radio_button_1_2 = radio_button_1.clone();
+    let radio_button_1_3 = radio_button_1.clone();
+
     let text_entry2 = text_entry.clone();
+    let text_entry3 = text_entry.clone();
+
+    let file_chooser2 = file_chooser.clone();
+
+    let list_store2 = list_store.clone();
+
+    let label_file_chooser2 = label_file_chooser.clone();
 
     //Connect main_window functions
     button_install.connect_clicked(move |_| {
-        match file_chooser.get_filename() {
-            Some(x) => match install_target(x) {
-                Ok(y) => {
-                    list_store.insert_with_values(Some(0), &[0, 1], &[&y, &"01.01.2100".to_string()]);
-                },
-                Err(Error(AlreadyInstalled(_), _)) => {
-                    text_entry2.set_text("");
-                    rb1_1.set_active(true);
-                    dialog3.show_all();
-                },
-                Err(Error(TargetTypeNotSupported, _)) => label_file_chooser.set_text("Target type is not supported!"),
-                Err(e) => {
-                    label_file_chooser.set_text("Installation Failed!");
-                }
+        match file_chooser.get_filename()
+            {
+                Some(s) => install(s.clone(), installman::lib::get_app_name(s).unwrap(),
+                                   list_store.clone(), text_entry.clone(),
+                                   radio_button_1.clone(), dialog.clone(), label_file_chooser.clone()),
+                None => label_file_chooser.set_text("Please Select An App"),
             }
-            None => label_file_chooser.set_text("Please Select An App"),
-        };
+        //install(file_chooser.get_filename(), list_store.clone(), text_entry.clone(), radio_button_1.clone(), dialog.clone(), label_file_chooser.clone());
+    });
+
+    button_ok.connect_clicked(move |_| {
+        dialog_ok(radio_button_1_2.clone(), text_entry2.clone(), dialog2.clone(), tx2.clone());
     });
 
     //Connect AlreadyInstalledDialog functions
     button_cancel.connect_clicked(move |_| {
-        tx2.send(AlreadyInstalledDecision::Cancel).unwrap();
-        dialog.hide();
+        tx3.send(AlreadyInstalledDecision::Cancel).unwrap();
+        dialog3.hide();
     });
 
-    button_ok.connect_clicked(move |_| {
-        if radio_button_1.get_active() {
-            // TODO: What to do if the new name is empty/also already exists
-            tx.send(AlreadyInstalledDecision::NewName(text_entry.get_text().unwrap())).unwrap();
-        } else {
-            tx.send(AlreadyInstalledDecision::Overwrite).unwrap();
-        }
-        dialog2.hide();
-    });
     window.show_all();
     window.connect_delete_event(move |_, _| {
         gtk::main_quit();
         Inhibit(false)
     });
-    gtk::main();
+
+    while (gtk::main_iteration()) {
+        use AlreadyInstalledDecision::*;
+
+        match rx.try_recv() {
+            Ok(Overwrite) => {
+                unimplemented!();
+            }
+            Ok(NewName(name)) => {
+                //redundant
+                match file_chooser2.get_filename()
+                {
+                    Some(filename) => install(filename.clone(), name,
+                                       list_store2.clone(), text_entry3.clone(),
+                                       radio_button_1_3.clone(), dialog4.clone(), label_file_chooser2.clone()),
+                    None => label_file_chooser2.set_text("Please Select An App"),
+                }
+            }
+            Ok(Cancel) => {
+                unimplemented!();
+            }
+            Err(e) => {}
+        }
+    }
+
+
     return;
 }
 
@@ -93,4 +116,31 @@ enum AlreadyInstalledDecision {
     Overwrite,
     NewName(String),
     Cancel,
+}
+
+fn install(path: PathBuf, name: String, list_store: gtk::ListStore, text_entry: gtk::Entry, radio_button_1: gtk::RadioButton, dialog: gtk::Dialog, label_file_chooser: gtk::Label) -> () {
+    match install_target(path, name) {
+        Ok(y) => {
+            list_store.insert_with_values(Some(0), &[0, 1], &[&y, &"01.01.2100".to_string()]);
+        }
+        Err(Error(AlreadyInstalledApp(_), _)) => {
+            text_entry.set_text("");
+            radio_button_1.set_active(true);
+            dialog.show_all();
+        }
+        Err(Error(TargetTypeNotSupported, _)) => label_file_chooser.set_text("Target type is not supported!"),
+        Err(e) => {
+            label_file_chooser.set_text("Installation Failed!");
+        }
+    }
+}
+
+fn dialog_ok (radio_button_1: gtk::RadioButton, text_entry: gtk::Entry, dialog: gtk::Dialog, tx: std::sync::mpsc::Sender< AlreadyInstalledDecision > ) -> (){
+if radio_button_1.get_active() {
+// TODO: What to do if the new name is empty/also already exists
+tx.send(AlreadyInstalledDecision::NewName(text_entry.get_text().unwrap())).unwrap();
+} else {
+tx.send(AlreadyInstalledDecision::Overwrite).unwrap();
+}
+dialog.hide();
 }

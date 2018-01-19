@@ -5,7 +5,7 @@ error_chain! {
         Toml(::toml::ser::Error);
     }
     errors {
-        AlreadyInstalled(n: String) {
+        AlreadyInstalledApp(n: String) {
             description("App already installed"),
             display("The app {} is already installed.", n),
         }

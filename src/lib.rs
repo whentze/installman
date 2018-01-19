@@ -139,7 +139,7 @@ pub mod lib {
         Ok(())
     }
 
-    fn get_app_name<A: AsRef<Path>>(path_app: A) -> Result<String> {
+    pub fn get_app_name<A: AsRef<Path>>(path_app: A) -> Result<String> {
         use std::path::Path;
         use self::TargetType::*;
 
@@ -149,21 +149,21 @@ pub mod lib {
         })
     }
 
-    pub fn install_target<A: AsRef<Path>>(path: A) -> Result<String> {
+    pub fn install_target<A: AsRef<Path>>(path: A, name: String) -> Result<String> {
         use self::TargetType::*;
 
         match classify_target(&path)? {
-            Executable(_) => Ok(install_executable(&path)?),
+            Executable(_) => Ok(install_executable(&path, name)?),
             _ => Err(ErrorKind::TargetTypeNotSupported.into()),
         }
     }
 
-    fn install_executable<A: AsRef<Path>>(path_exec: A) -> Result<String> {
+    fn install_executable<A: AsRef<Path>>(path_exec: A, app_name: String) -> Result<String> {
         use std::fs::copy;
 
-        let app_name = get_app_name(&path_exec)?;
         if app_exists(&app_name) {
-            return Err(ErrorKind::AlreadyInstalled(app_name).into());
+            println!("{:?}", app_name);
+            return Err(ErrorKind::AlreadyInstalledApp(app_name).into());
         }
         let mut dest_path = (&CONFIG.read().unwrap().apps_location).clone();
         dest_path.push(&app_name);
