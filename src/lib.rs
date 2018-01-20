@@ -244,16 +244,14 @@ pub mod lib {
     }
 
     fn remove_data (name: &str) -> Result<()>{
-        /*
         let mut lock = DATA.write().unwrap();
-        let mut vec =   &*(*lock).installed_apps;
-        let i = vec.iter().position(|x| x.name == name).unwrap();
-        vec.remove(i);
-        ::std::mem::drop(vec);
+        {
+            let vec = &mut (*lock).installed_apps;
+            let i = vec.iter().position(|x| x.name == name).unwrap();
+            vec.remove(i);
+        }
         ::std::mem::drop(lock);
         Data::store();
-        Ok(())
-        */
         Ok(())
     }
 }
