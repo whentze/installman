@@ -130,7 +130,7 @@ pub mod lib {
         }
     }
 
-    fn add_symlink<A: AsRef<Path>>(dest: A, symlink_name: &str) -> Result<()> {
+    fn create_symlink<A: AsRef<Path>>(dest: A, symlink_name: &str) -> Result<()> {
         use std::os::unix::fs;
 
         let mut path = (&CONFIG.read().unwrap().bin_symlink_location).clone();
@@ -138,6 +138,16 @@ pub mod lib {
         fs::symlink(dest, path)?;
         Ok(())
     }
+
+    fn remove_symlink (name: &str) -> Result<()>{
+        use std::fs;
+
+        let mut path = (&CONFIG.read().unwrap().bin_symlink_location).clone();
+        path.push(name);
+        fs::remove_file(path);
+        Ok(())
+    }
+
 
     pub fn get_app_name<A: AsRef<Path>>(path_app: A) -> Result<String> {
         use std::path::Path;
@@ -158,6 +168,14 @@ pub mod lib {
         }
     }
 
+    pub fn uninstall_target(name: &str) -> Result<()>{
+        remove_symlink(name);
+        remove_desktop_file(name);
+        remove_app(name);
+        remove_data(name);
+        Ok(())
+    }
+
     fn install_executable<A: AsRef<Path>>(path_exec: A, app_name: String) -> Result<String> {
         use std::fs::copy;
 
@@ -171,7 +189,8 @@ pub mod lib {
         fs::create_dir_all(&dest_path)?;
         dest_path.push(&*path_exec.as_ref().file_name().unwrap());
         copy(path_exec, &dest_path)?;
-        add_symlink(&dest_path, &app_name);
+        create_symlink(&dest_path, &app_name);
+        create_desktop_file(&app_name);
 
         let new_app = super::config::App{name: app_name.clone()};
         DATA.write().unwrap().installed_apps.push(new_app);
@@ -199,8 +218,42 @@ pub mod lib {
         let mut file = File::create(&CONFIG.read().unwrap()
             .desktop_files_location
             .join(name)
-            .with_extension(".desktop"))?;
+            .with_extension("desktop"))?;
         file.write_all(content.as_bytes())?;
+        Ok(())
+    }
+
+    fn remove_desktop_file(name: &str) -> Result<()>{
+        use std::fs;
+
+        let mut path = (&CONFIG.read().unwrap().desktop_files_location).clone();
+        path.push(name);
+        path.set_extension("desktop");
+        println!("{:?}", path);
+        fs::remove_file(path);
+        Ok(())
+    }
+
+    fn remove_app(name: &str) -> Result<()> {
+        use std::fs;
+
+        let mut path = (&CONFIG.read().unwrap().apps_location).clone();
+        path.push(name);
+        println!("{:?}", fs::remove_dir_all(path));
+        Ok(())
+    }
+
+    fn remove_data (name: &str) -> Result<()>{
+        /*
+        let mut lock = DATA.write().unwrap();
+        let mut vec =   &*(*lock).installed_apps;
+        let i = vec.iter().position(|x| x.name == name).unwrap();
+        vec.remove(i);
+        ::std::mem::drop(vec);
+        ::std::mem::drop(lock);
+        Data::store();
+        Ok(())
+        */
         Ok(())
     }
 }

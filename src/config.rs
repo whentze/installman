@@ -112,7 +112,6 @@ impl Config {
         }
     }
 
-    #[allow(dead_code)]
     fn store() -> Result<()> {
         store_file(&*CONFIG, &*CONFIG_LOCATION).unwrap();
         Ok(())
@@ -129,6 +128,7 @@ impl Config {
             Err(_) => {
                 File::create(&*CONFIG_LOCATION).unwrap();
                 let conf = Config::default();
+                println!("store config");
                 store_file(&conf, &*CONFIG_LOCATION).unwrap();
                 conf
             }

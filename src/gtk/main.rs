@@ -18,8 +18,10 @@ fn main() {
     let glade_src = include_str!("gui.glade");
     let builder = gtk::Builder::new_from_string(glade_src);
     let button_install: gtk::Button = builder.get_object("button_install").unwrap();
+    let button_uninstall: gtk::Button = builder.get_object("button_uninstall").unwrap();
     let file_chooser: gtk::FileChooser = builder.get_object("file_chooser").unwrap();
     let list_store: gtk::ListStore = builder.get_object("list_store").unwrap();
+    let tree_view: gtk::TreeView = builder.get_object("tree_view").unwrap();
     let label_file_chooser: gtk::Label = builder.get_object("label_file_chooser").unwrap();
     let window: gtk::ApplicationWindow = builder.get_object("main_window").unwrap();
     for element in DATA.read().unwrap().installed_apps.iter() {
@@ -56,6 +58,15 @@ fn main() {
     let label_file_chooser2 = label_file_chooser.clone();
 
     //Connect main_window functions
+    button_uninstall.connect_clicked(move |_|{
+        let tree_selection = tree_view.get_selection();
+        let x = tree_selection.get_selected();
+        let x1 = x.clone();
+        let y = x1.unwrap().1;
+        let value = x.unwrap().0.get_value(&y, 0);
+        installman::lib::uninstall_target(&value.get::<String>().unwrap());
+    });
+
     button_install.connect_clicked(move |_| {
         match file_chooser.get_filename()
             {
