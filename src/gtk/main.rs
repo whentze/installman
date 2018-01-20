@@ -54,6 +54,7 @@ fn main() {
     let file_chooser2 = file_chooser.clone();
 
     let list_store2 = list_store.clone();
+    let list_store3 = list_store.clone();
 
     let label_file_chooser2 = label_file_chooser.clone();
 
@@ -64,7 +65,8 @@ fn main() {
         let x1 = x.clone();
         let y = x1.unwrap().1;
         let value = x.unwrap().0.get_value(&y, 0);
-        installman::lib::uninstall_target(&value.get::<String>().unwrap());
+        installman::lib::uninstall_target(&value.get::<String>().unwrap()).unwrap();
+        list_store3.remove(&y);
     });
 
     button_install.connect_clicked(move |_| {
@@ -75,7 +77,6 @@ fn main() {
                                    radio_button_1.clone(), dialog.clone(), label_file_chooser.clone()),
                 None => label_file_chooser.set_text("Please Select An App"),
             }
-        //install(file_chooser.get_filename(), list_store.clone(), text_entry.clone(), radio_button_1.clone(), dialog.clone(), label_file_chooser.clone());
     });
 
     button_ok.connect_clicked(move |_| {
