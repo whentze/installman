@@ -73,11 +73,18 @@ fn main() {
     button_uninstall.connect_clicked(move |_|{
         let tree_selection = tree_view.get_selection();
         let x = tree_selection.get_selected();
-        let x1 = x.clone();
-        let y = x1.unwrap().1;
-        let value = x.unwrap().0.get_value(&y, 0);
-        installman::lib::uninstall_target(&value.get::<String>().unwrap()).unwrap();
-        list_store3.remove(&y);
+        match x{
+            Some(_) =>{
+                let x1 = x.clone();
+                let y = x1.unwrap().1;
+                let value = x.unwrap().0.get_value(&y, 0);
+                installman::lib::uninstall_target(&value.get::<String>().unwrap()).unwrap();
+                list_store3.remove(&y);
+            },
+            None => {}
+        }
+
+
     });
 
     button_install.connect_clicked(move |_| {
@@ -115,9 +122,7 @@ fn main() {
                 let model = tree_view2.get_model();
                 let mut i = model.clone().unwrap().get_iter_first();
                 loop{
-                    println!("{:?}, {:?}",model.clone().unwrap().get_value(&i.clone().unwrap(),0).get::<String>().unwrap(), overwrite_data.0);
                     if model.clone().unwrap().get_value(&i.clone().unwrap(),0).get::<String>().unwrap() == overwrite_data.0{
-                        //println!("scuuur");
                         list_store4.remove(&i.clone().unwrap());
                         break;
                     }
@@ -134,19 +139,6 @@ fn main() {
                 match file_chooser2.get_filename()
                 {
                     Some(filename) => {
-                        let model = tree_view2.get_model();
-                        let mut i = model.clone().unwrap().get_iter_first();
-                        loop{
-                            println!("{:?}, {:?}",model.clone().unwrap().get_value(&i.clone().unwrap(),0).get::<String>().unwrap(), overwrite_data.0);
-                            if model.clone().unwrap().get_value(&i.clone().unwrap(),0).get::<String>().unwrap() == overwrite_data.0{
-                                //println!("scuuur");
-                                list_store4.remove(&i.clone().unwrap());
-                                break;
-                            }
-                            if !model.clone().unwrap().iter_next(&i.clone().unwrap()){
-                                break;
-                            }
-                        }
                         install(filename.clone(), name, s_gui_msg2.clone(),
                                 list_store2.clone(), text_entry3.clone(),
                                 radio_button_1_3.clone(), dialog4.clone(), label_file_chooser2.clone());
@@ -154,14 +146,11 @@ fn main() {
                     None => label_file_chooser2.set_text("Please Select An App"),
                 }
             }
-            Ok(Cancel) => {
-                unimplemented!();
-            }
+            Ok(Cancel) => dialog4.hide(),
             Err(e) => {}
         }
         match r_gui_msg.try_recv(){
             Ok(StoreOverwrite(n, p)) => {
-                println!("name: {:?}, path: {:?}", n.clone(), p.clone());
                 overwrite_data = (n, p);
             },
             Err(e) => {},
@@ -186,7 +175,6 @@ enum GUIMessage {
 fn install(path: PathBuf, name: String, s_gui_msg: std::sync::mpsc::Sender< GUIMessage>, list_store: gtk::ListStore, text_entry: gtk::Entry, radio_button_1: gtk::RadioButton, dialog: gtk::Dialog, label_file_chooser: gtk::Label) -> () {
     match install_target(path.clone(), name.clone()) {
         Ok(y) => {
-            println!("installation complete");
             list_store.insert_with_values(Some(0), &[0, 1], &[&y, &"01.01.2100".to_string()]);
         }
         Err(Error(AlreadyInstalledApp(_), _)) => {
@@ -197,7 +185,6 @@ fn install(path: PathBuf, name: String, s_gui_msg: std::sync::mpsc::Sender< GUIM
         }
         Err(Error(TargetTypeNotSupported, _)) => label_file_chooser.set_text("Target type is not supported!"),
         Err(e) => {
-            eprintln!("{}",e);
             label_file_chooser.set_text("Installation Failed!");
         }
     }

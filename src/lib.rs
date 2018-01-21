@@ -161,13 +161,11 @@ pub mod lib {
 
     pub fn install_target<A: AsRef<Path>>(path: A, name: String) -> Result<String> {
         use self::TargetType::*;
-        println!("install_target: path: {:?}, name: {:?}", path.as_ref().to_str(), name);
         match classify_target(&path)? {
             Executable(_) => {
                 Ok(install_executable(&path, name)?)
             },
             _ => {
-                println!("scuuuur");
                 Err(ErrorKind::TargetTypeNotSupported.into())
             },
         }
@@ -233,7 +231,6 @@ pub mod lib {
         let mut path = (&CONFIG.read().unwrap().desktop_files_location).clone();
         path.push(name);
         path.set_extension("desktop");
-        println!("{:?}", path);
         fs::remove_file(path);
         Ok(())
     }
