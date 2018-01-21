@@ -7,6 +7,7 @@ use installman::config::DATA;
 use installman::error::*;
 use std::sync::mpsc::channel;
 use std::path::PathBuf;
+use std::sync::RwLock;
 
 fn main() {
     installman::lib::init().unwrap();
@@ -40,6 +41,11 @@ fn main() {
     let tx2 = tx.clone();
     let tx3 = tx.clone();
 
+    let (s_gui_msg, r_gui_msg) = channel();
+    let s_gui_msg2 = s_gui_msg.clone();
+    let s_gui_msg3 = s_gui_msg.clone();
+    let s_gui_msg4 = s_gui_msg.clone();
+
 
     let dialog2 = dialog.clone();
     let dialog3 = dialog.clone();
@@ -55,8 +61,13 @@ fn main() {
 
     let list_store2 = list_store.clone();
     let list_store3 = list_store.clone();
+    let list_store4 = list_store.clone();
 
     let label_file_chooser2 = label_file_chooser.clone();
+
+    let tree_view2 = tree_view.clone();
+
+    let mut overwrite_data = (String::new(), String::new());
 
     //Connect main_window functions
     button_uninstall.connect_clicked(move |_|{
@@ -72,7 +83,7 @@ fn main() {
     button_install.connect_clicked(move |_| {
         match file_chooser.get_filename()
             {
-                Some(s) => install(s.clone(), installman::lib::get_app_name(s).unwrap(),
+                Some(s) => install(s.clone(), installman::lib::get_app_name(s).unwrap(), s_gui_msg3.clone(),
                                    list_store.clone(), text_entry.clone(),
                                    radio_button_1.clone(), dialog.clone(), label_file_chooser.clone()),
                 None => label_file_chooser.set_text("Please Select An App"),
@@ -80,7 +91,7 @@ fn main() {
     });
 
     button_ok.connect_clicked(move |_| {
-        dialog_ok(radio_button_1_2.clone(), text_entry2.clone(), dialog2.clone(), tx2.clone());
+        dialog_ok(s_gui_msg.clone() ,radio_button_1_2.clone(), text_entry2.clone(), dialog2.clone(), tx2.clone());
     });
 
     //Connect AlreadyInstalledDialog functions
@@ -97,18 +108,49 @@ fn main() {
 
     while (gtk::main_iteration()) {
         use AlreadyInstalledDecision::*;
-
+        use GUIMessage::*;
         match rx.try_recv() {
             Ok(Overwrite) => {
-                unimplemented!();
+                installman::lib::uninstall_target(&overwrite_data.0.clone());
+                let model = tree_view2.get_model();
+                let mut i = model.clone().unwrap().get_iter_first();
+                loop{
+                    println!("{:?}, {:?}",model.clone().unwrap().get_value(&i.clone().unwrap(),0).get::<String>().unwrap(), overwrite_data.0);
+                    if model.clone().unwrap().get_value(&i.clone().unwrap(),0).get::<String>().unwrap() == overwrite_data.0{
+                        //println!("scuuur");
+                        list_store4.remove(&i.clone().unwrap());
+                        break;
+                    }
+                    if !model.clone().unwrap().iter_next(&i.clone().unwrap()){
+                        break;
+                    }
+                }
+                install(std::path::PathBuf::from(&overwrite_data.1), overwrite_data.0.clone(), s_gui_msg2.clone(),
+                        list_store2.clone(), text_entry3.clone(),
+                        radio_button_1_3.clone(), dialog4.clone(), label_file_chooser2.clone());
             }
             Ok(NewName(name)) => {
                 //redundant
                 match file_chooser2.get_filename()
                 {
-                    Some(filename) => install(filename.clone(), name,
-                                       list_store2.clone(), text_entry3.clone(),
-                                       radio_button_1_3.clone(), dialog4.clone(), label_file_chooser2.clone()),
+                    Some(filename) => {
+                        let model = tree_view2.get_model();
+                        let mut i = model.clone().unwrap().get_iter_first();
+                        loop{
+                            println!("{:?}, {:?}",model.clone().unwrap().get_value(&i.clone().unwrap(),0).get::<String>().unwrap(), overwrite_data.0);
+                            if model.clone().unwrap().get_value(&i.clone().unwrap(),0).get::<String>().unwrap() == overwrite_data.0{
+                                //println!("scuuur");
+                                list_store4.remove(&i.clone().unwrap());
+                                break;
+                            }
+                            if !model.clone().unwrap().iter_next(&i.clone().unwrap()){
+                                break;
+                            }
+                        }
+                        install(filename.clone(), name, s_gui_msg2.clone(),
+                                list_store2.clone(), text_entry3.clone(),
+                                radio_button_1_3.clone(), dialog4.clone(), label_file_chooser2.clone());
+                    },
                     None => label_file_chooser2.set_text("Please Select An App"),
                 }
             }
@@ -117,9 +159,14 @@ fn main() {
             }
             Err(e) => {}
         }
+        match r_gui_msg.try_recv(){
+            Ok(StoreOverwrite(n, p)) => {
+                println!("name: {:?}, path: {:?}", n.clone(), p.clone());
+                overwrite_data = (n, p);
+            },
+            Err(e) => {},
+        }
     }
-
-
     return;
 }
 
@@ -130,29 +177,38 @@ enum AlreadyInstalledDecision {
     Cancel,
 }
 
-fn install(path: PathBuf, name: String, list_store: gtk::ListStore, text_entry: gtk::Entry, radio_button_1: gtk::RadioButton, dialog: gtk::Dialog, label_file_chooser: gtk::Label) -> () {
-    match install_target(path, name) {
+#[derive(Debug)]
+enum GUIMessage {
+    StoreOverwrite(String, String),
+}
+
+
+fn install(path: PathBuf, name: String, s_gui_msg: std::sync::mpsc::Sender< GUIMessage>, list_store: gtk::ListStore, text_entry: gtk::Entry, radio_button_1: gtk::RadioButton, dialog: gtk::Dialog, label_file_chooser: gtk::Label) -> () {
+    match install_target(path.clone(), name.clone()) {
         Ok(y) => {
+            println!("installation complete");
             list_store.insert_with_values(Some(0), &[0, 1], &[&y, &"01.01.2100".to_string()]);
         }
         Err(Error(AlreadyInstalledApp(_), _)) => {
+            s_gui_msg.send(GUIMessage::StoreOverwrite( name,path.to_str().unwrap().to_string()));
             text_entry.set_text("");
             radio_button_1.set_active(true);
             dialog.show_all();
         }
         Err(Error(TargetTypeNotSupported, _)) => label_file_chooser.set_text("Target type is not supported!"),
         Err(e) => {
+            eprintln!("{}",e);
             label_file_chooser.set_text("Installation Failed!");
         }
     }
 }
 
-fn dialog_ok (radio_button_1: gtk::RadioButton, text_entry: gtk::Entry, dialog: gtk::Dialog, tx: std::sync::mpsc::Sender< AlreadyInstalledDecision > ) -> (){
-if radio_button_1.get_active() {
-// TODO: What to do if the new name is empty/also already exists
-tx.send(AlreadyInstalledDecision::NewName(text_entry.get_text().unwrap())).unwrap();
-} else {
-tx.send(AlreadyInstalledDecision::Overwrite).unwrap();
-}
-dialog.hide();
+fn dialog_ok (s_gui_msg: std::sync::mpsc::Sender< GUIMessage>, radio_button_1: gtk::RadioButton, text_entry: gtk::Entry, dialog: gtk::Dialog, tx: std::sync::mpsc::Sender< AlreadyInstalledDecision > ) -> (){
+    if radio_button_1.get_active() {
+        // TODO: What to do if the new name is empty/also already exists
+        tx.send(AlreadyInstalledDecision::NewName(text_entry.get_text().unwrap())).unwrap();
+    } else {
+        tx.send(AlreadyInstalledDecision::Overwrite).unwrap();
+    }
+    dialog.hide();
 }

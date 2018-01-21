@@ -161,10 +161,15 @@ pub mod lib {
 
     pub fn install_target<A: AsRef<Path>>(path: A, name: String) -> Result<String> {
         use self::TargetType::*;
-
+        println!("install_target: path: {:?}, name: {:?}", path.as_ref().to_str(), name);
         match classify_target(&path)? {
-            Executable(_) => Ok(install_executable(&path, name)?),
-            _ => Err(ErrorKind::TargetTypeNotSupported.into()),
+            Executable(_) => {
+                Ok(install_executable(&path, name)?)
+            },
+            _ => {
+                println!("scuuuur");
+                Err(ErrorKind::TargetTypeNotSupported.into())
+            },
         }
     }
 
@@ -180,7 +185,6 @@ pub mod lib {
         use std::fs::copy;
 
         if app_exists(&app_name) {
-            println!("{:?}", app_name);
             return Err(ErrorKind::AlreadyInstalledApp(app_name).into());
         }
         let mut dest_path = (&CONFIG.read().unwrap().apps_location).clone();
@@ -239,7 +243,7 @@ pub mod lib {
 
         let mut path = (&CONFIG.read().unwrap().apps_location).clone();
         path.push(name);
-        println!("{:?}", fs::remove_dir_all(path));
+        fs::remove_dir_all(path);
         Ok(())
     }
 

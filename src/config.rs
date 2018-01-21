@@ -128,7 +128,6 @@ impl Config {
             Err(_) => {
                 File::create(&*CONFIG_LOCATION).unwrap();
                 let conf = Config::default();
-                println!("store config");
                 store_file(&conf, &*CONFIG_LOCATION).unwrap();
                 conf
             }
