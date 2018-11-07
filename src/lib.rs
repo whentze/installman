@@ -1,4 +1,4 @@
-#![feature(slice_patterns, advanced_slice_patterns)]
+#![feature(slice_patterns)]
 
 #[macro_use]
 extern crate lazy_static;
